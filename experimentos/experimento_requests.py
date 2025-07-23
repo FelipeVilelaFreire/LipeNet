@@ -1,6 +1,6 @@
 import requests
 
-url_api = 'https://catfact.ninja/fact'
+url_api = "https://catfact.ninja/fact"
 
 print("Fazendo um pedido para a API de fatos sobre gatos...")
 
@@ -11,7 +11,7 @@ try:
         print("Conexão bem-sucedida! Recebemos uma resposta.")
         dados = resposta.json()
 
-        fato_sobre_gato = dados['fact']
+        fato_sobre_gato = dados["fact"]
         print(f"\nFato Recebido: {fato_sobre_gato}")
 
     else:
