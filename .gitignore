@@ -201,3 +201,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+
+# Ignorar arquivos de imagem comuns
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.webp
+
+# Adicione também arquivos de IDE e sistema que podem aparecer
+.idea/
+.vscode/
