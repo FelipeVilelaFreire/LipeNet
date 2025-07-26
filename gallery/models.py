@@ -1,7 +1,7 @@
 from django.db import models
 
-class Photos(models.Model):
-    text = models.TextField()
+class Photo(models.Model):
+    text = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='photos/')
     # TextField é para textos longos. blank=True e null=True significam que este campo é opcional.
     caption = models.TextField(blank=True, null=True)

@@ -1,8 +1,10 @@
+
 from django.urls import path
-from . import views
+from .views import PhotoListAPIView
 
 app_name = 'gallery'
 
 urlpatterns = [
-    path('', views.home_view, name='home'),
+    # Quando a URL for 'api/photos/', chame nossa nova view.
+    path('api/photos/', PhotoListAPIView.as_view(), name='photo-list'),
 ]
