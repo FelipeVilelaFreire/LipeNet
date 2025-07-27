@@ -1,12 +1,12 @@
-
 import Header from './components/Header';
+import UploadForm from './components/UploadForm'; // Importamos nosso novo formulário
 
 function App() {
   return (
     <div>
       <Header />
       <main>
-        <p>O conteúdo principal do site virá aqui...</p>
+        <UploadForm />
       </main>
     </div>
   );
