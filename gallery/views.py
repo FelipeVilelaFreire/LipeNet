@@ -1,8 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status  # Importamos o módulo de status!
+from django.http import Http404
 from .models import Photo
 from .serializers import PhotoSerializer
+
+
 class PhotoListAPIView(APIView):
     """
     Esta View vai listar todas as fotos do banco de dados.
@@ -31,3 +34,21 @@ class PhotoListAPIView(APIView):
 
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PhotoDetailAPIView(APIView):
+        """
+        View para buscar, atualizar ou deletar uma única instância de Photo.
+        """
+        def get_object(self, pk):
+            # Função auxiliar para pegar o objeto ou retornar um erro 404
+            try:
+                return Photo.objects.get(pk=pk)
+            except Photo.DoesNotExist:
+                raise Http404
+
+        def get(self, request, pk):
+            # Usamos nossa função auxiliar para pegar a foto
+            photo = self.get_object(pk)
+            # Usamos o MESMO serializer, mas sem 'many=True'
+            serializer = PhotoSerializer(photo)
+            return Response(serializer.data)
