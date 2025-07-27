@@ -216,5 +216,35 @@ __marimo__/
 .idea/
 .vscode/
 
+# Ignorar todos os arquivos enviados por usuários
+/media/
 
 agenda.txt
+
+# =================================
+# Frontend (Node.js / React / Vite)
+# =================================
+
+# A pasta de dependências, equivalente ao 'venv'. É a mais importante!
+node_modules/
+
+# Arquivos de log de erro gerados pelo npm
+npm-debug.log*
+yarn-error.log
+pnpm-debug.log
+
+# Pasta de build de produção (criada pelo comando 'npm run build')
+# Nós nunca enviamos o código "compilado", apenas o código-fonte.
+dist/
+.output/
+
+# Arquivos de ambiente locais do frontend (o '.env' do React)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Arquivos de cache de ferramentas de frontend
+.eslintcache
+.stylelintcache
+.vite-node-cache/
