@@ -1,7 +1,7 @@
+from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status  # Importamos o módulo de status!
-from django.http import Http404
+from rest_framework import status
 from .models import Photo
 from .serializers import PhotoSerializer
 
@@ -27,7 +27,6 @@ class PhotoListAPIView(APIView):
     def post(self, request):
         serializer = PhotoSerializer(data=request.data)
         if serializer.is_valid():
-            # Se for válido, o .save() cria um novo objeto Photo no banco de dados.
             serializer.save()
             # Retornamos os dados do objeto recém-criado e um status HTTP "201 CREATED".
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -52,3 +51,19 @@ class PhotoDetailAPIView(APIView):
             # Usamos o MESMO serializer, mas sem 'many=True'
             serializer = PhotoSerializer(photo)
             return Response(serializer.data)
+
+        def put(self, request, pk):
+            photo = self.get_object(pk)
+            # Para atualizar, passamos a instância original E os novos dados.
+            serializer = PhotoSerializer(photo, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        def delete(self, request, pk):
+            photo = self.get_object(pk)
+            photo.delete()
+            # Para um delete bem-sucedido, retornamos uma resposta "Sem Conteúdo".
+            return Response(status=status.HTTP_204_NO_CONTENT)
