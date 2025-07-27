@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Photo  # Usando o nome singular que discutimos :)
+from rest_framework import status  # Importamos o módulo de status!
+from .models import Photo
 from .serializers import PhotoSerializer
-
 class PhotoListAPIView(APIView):
     """
     Esta View vai listar todas as fotos do banco de dados.
@@ -20,4 +20,14 @@ class PhotoListAPIView(APIView):
         #    'serializer.data' contém os dados já traduzidos para um formato
         #    que o DRF consegue facilmente converter para JSON.
         return Response(serializer.data)
-# Create your views here.
+
+    def post(self, request):
+        serializer = PhotoSerializer(data=request.data)
+        if serializer.is_valid():
+            # Se for válido, o .save() cria um novo objeto Photo no banco de dados.
+            serializer.save()
+            # Retornamos os dados do objeto recém-criado e um status HTTP "201 CREATED".
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
