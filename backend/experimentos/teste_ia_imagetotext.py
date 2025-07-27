@@ -13,7 +13,7 @@ try:
     print("Modelo de IA carregado com sucesso!")
 
     # 3. Abrimos nossa imagem local usando a Pillow
-    imagem = Image.open("../imagens/Eu e belinha.jpg")
+    imagem = Image.open("../../imagens/Eu e belinha.jpg")
     print("Imagem 'Eu e belinha.jpg' carregada.")
 
     # 4. A MÁGICA: Passamos a imagem para a IA
