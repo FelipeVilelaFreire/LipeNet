@@ -1,34 +1,43 @@
-import PhotoCard from './PhotoCard'; // Importamos nosso componente de card
+// Arquivo: src/components/PhotoGallery.jsx
 
-// 1. Nossos dados "falsos" (mock data) para o teste de hoje.
-const dummyPhotos = [
-  {
-    id: 1,
-    text: 'Gato olhando a paisagem',
-    image: 'https://placekitten.com/300/200', // URL de imagem de gatinho
-    caption: 'a cat looking out a window'
-  },
-  {
-    id: 2,
-    text: 'Outro gatinho!',
-    image: 'https://placekitten.com/301/200',
-    caption: 'a closeup of a cat face'
-  },
-  {
-    id: 3,
-    text: 'Um terceiro gatinho para dar sorte',
-    image: 'https://placekitten.com/300/201',
-    caption: 'a small kitten sitting on a blanket'
-  }
-];
+// 1. Importamos os hooks 'useState' e 'useEffect' do React
+import { useState, useEffect } from 'react';
+// 2. Importamos o axios para fazer as chamadas de API
+import axios from 'axios';
+import PhotoCard from './PhotoCard';
 
 function PhotoGallery() {
+  const [photos, setPhotos] = useState([]);
+
+  // 3. Usamos o useEffect para buscar os dados da API QUANDO o componente carregar.
+  useEffect(() => {
+    // Criamos uma função 'async' para poder usar 'await'
+    async function fetchPhotos() {
+      try {
+        // 5. O axios faz a requisição GET para nosso endpoint Django.
+        const response = await axios.get('http://127.0.0.1:8000/api/photos/');
+        // 6. Atualizamos nosso estado 'photos' com os dados recebidos da API.
+        setPhotos(response.data);
+      } catch (error) {
+        // Se der erro, mostramos no console.
+        console.error("Erro ao buscar as fotos:", error);
+      }
+    }
+
+    fetchPhotos(); // Executamos a função que acabamos de criar.
+  }, []); // 7. O array vazio [] significa: "execute este efeito apenas UMA VEZ".
+
   return (
     <div>
       <h2>Minha Galeria</h2>
       <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-        {/* 2. A MÁGICA ACONTECE AQUI */}
-        {dummyPhotos.map(photo => (<PhotoCard key={photo.id} photo={photo}/>))}
+        {/* 8. Agora, o .map() usa a nossa variável de estado 'photos' */}
+        {photos.map(photo => (
+          <PhotoCard
+            key={photo.id}
+            photo={photo}
+          />
+        ))}
       </div>
     </div>
   );
