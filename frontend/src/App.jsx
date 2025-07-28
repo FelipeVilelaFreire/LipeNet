@@ -1,5 +1,6 @@
 import Header from './components/Header';
 import UploadForm from './components/UploadForm'; // Importamos nosso novo formulário
+import PhotoGallery from './components/PhotoGallery'
 
 function App() {
   return (
@@ -7,6 +8,8 @@ function App() {
       <Header />
       <main>
         <UploadForm />
+            <hr /> {/* Uma linha para separar */}
+        <PhotoGallery />
       </main>
     </div>
   );
