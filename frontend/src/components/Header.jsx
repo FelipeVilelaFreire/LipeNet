@@ -1,27 +1,26 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
 
 function Header() {
   return (
-    <header
-      style={{
-        padding: "20px",
-        backgroundColor: "#f0f0f0",
-        display: "flex",
-        justifyContent: "space-between",
-      }}
-    >
-      <div>
-        <h1>LipeNet</h1>
-        <p>Sua Galeria de Fotos Inteligente</p>
-      </div>
-      <nav>
-        <Link to="/" style={{ marginRight: "15px" }}>
-          Galeria
-        </Link>
-        <Link to="/upload">Upload</Link>
-      </nav>
-    </header>
+    <Navbar expand="lg" className="bg-body-tertiary" bg="light" data-bs-theme="light">
+      <Container>
+        <Navbar.Brand href="/">LipeNet</Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="me-auto">
+
+            <Nav.Link as={Link} to="/">Galeria</Nav.Link>
+            <Nav.Link as={Link} to="/upload">Upload</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
 }
 
 export default Header;
+
+
