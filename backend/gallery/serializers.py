@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import Photo
+from .models import Photo,Tag
 
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ['id', 'text', 'image', 'caption', 'created_at']
+        tag = serializers.StringRelatedField(many=True,read_only=True)
+        fields = ['id', 'text', 'image', 'caption', 'created_at','tags']

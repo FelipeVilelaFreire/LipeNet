@@ -2,7 +2,7 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Photo
+from .models import Photo,Tag
 from .serializers import PhotoSerializer
 from PIL import Image
 from transformers import pipeline
@@ -10,8 +10,9 @@ from transformers import pipeline
 # --- Carregamento do Modelo de IA ---
 print("Carregando o modelo de IA para geração de legendas...")
 # Carregamos o modelo uma vez quando este arquivo é lido pelo servidor Django
-captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
-print("Modelo de IA carregado e pronto para uso.")
+captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")     #Image-to-text geral
+object_detector = pipeline("object-detection", model="facebook/detr-resnet-50")         #Gerar tags
+print("Modelos de IA carregados.")
 
 
 
@@ -38,12 +39,32 @@ class PhotoListAPIView(APIView):
         if serializer.is_valid():
             image_file = serializer.validated_data['image']
             pil_image = Image.open(image_file).convert("RGB")
-            generated_caption_result = captioner(pil_image)
-            generated_caption = generated_caption_result[0]['generated_text']
-            print(f"Legenda Gerada pela IA: {generated_caption}")
-            serializer.save(caption=generated_caption)
-            # Retornamos os dados do objeto recém-criado e um status HTTP "201 CREATED".
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            generated_caption = captioner(pil_image)[0]['generated_text']
+
+            # Primeiro, salvamos a foto com a legenda para obter um objeto com ID
+            photo_instance = serializer.save(caption=generated_caption)
+
+            detected_objects = object_detector(pil_image)
+
+            # Criamos um conjunto para evitar tags duplicadas
+            print("--- OBJETOS DETECTADOS PELA IA (ANTES DO FILTRO) ---")
+            print(detected_objects)
+            found_tags = set()
+            for obj in detected_objects:
+                tag_name = obj['label']
+                # Adicionamos apenas tags com uma pontuação de confiança razoável
+                if obj['score'] > 0.8:
+                    found_tags.add(tag_name)
+
+            # Para cada nome de tag encontrado, pegamos ou criamos o objeto Tag
+            for tag_name in found_tags:
+                tag, created = Tag.objects.get_or_create(name=tag_name)
+                photo_instance.tags.add(tag)  # Associamos a tag à foto
+
+            # Precisamos reserializar a instância para incluir as tags na resposta
+            final_serializer = PhotoSerializer(photo_instance)
+            return Response(final_serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PhotoDetailAPIView(APIView):
