@@ -1,0 +1,40 @@
+/* Arquivo: frontend/src/components/PhotoCard.css */
+.photo-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  /* Efeito de "vidro fosco" para navegadores que suportam */
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  display: flex; /* Essencial para o card ocupar toda a altura da coluna */
+  flex-direction: column;
+}
+
+.photo-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+  border-color: var(--accent-color);
+}
+
+/* A SOLUÇÃO PARA AS IMAGENS! */
+.card-image-container {
+  overflow: hidden; /* Esconde as partes da imagem que sobrarem */
+}
+
+.card-image {
+  width: auto;
+  height: 300px;
+  object-fit: cover; /* Faz a imagem cobrir o container sem distorcer */
+  transition: transform 0.3s ease;
+}
+
+.photo-card:hover .card-image {
+  transform: scale(1.05); /* Efeito de zoom sutil na imagem ao passar o mouse */
+}
+
+.card-title {
+  color: #ffffff !important;
+}
+
+.card-text {
+  color: var(--text-secondary) !important;
+}

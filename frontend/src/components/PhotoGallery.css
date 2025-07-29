@@ -1,0 +1,11 @@
+.gallery-container {
+  /* Define a largura máxima que nossa galeria pode ter */
+  max-width: 1200px;
+
+  /* O truque para centralizar um container com largura definida */
+  margin-left: auto;
+  margin-right: auto;
+
+  /* Um pouco de espaçamento interno para não colar nas bordas em telas menores */
+  padding: 20px;
+}

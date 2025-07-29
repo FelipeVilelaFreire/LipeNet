@@ -1,20 +1,27 @@
-import PhotoCard from './PhotoCard';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
+// Arquivo: src/components/PhotoGallery.jsx
+import PhotoCard from "./PhotoCard";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+import "./PhotoGallery.css";
 
 function PhotoGallery({ photos }) {
   return (
-    <Container>
-      <h2 className="my-4">Minha Galeria</h2>
+    <div className="gallery-container">
+      <h2 className="my-4 text-center">Minha Galeria</h2>
       <Row>
-        {photos.map(photo => (
-          <Col key={photo.id} lg={4} md={6} xs={12} className="mb-4">
+        {photos.map((photo) => (
+          <Col key={photo.id}
+ xl={3}
+            lg={4}
+            md={6}
+            xs={12}
+            className="mb-4 d-flex"
+          >
             <PhotoCard photo={photo} />
           </Col>
         ))}
       </Row>
-    </Container>
+    </div>
   );
 }
 

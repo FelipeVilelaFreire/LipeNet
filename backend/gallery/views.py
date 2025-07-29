@@ -4,6 +4,15 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Photo
 from .serializers import PhotoSerializer
+from PIL import Image
+from transformers import pipeline
+
+# --- Carregamento do Modelo de IA ---
+print("Carregando o modelo de IA para geração de legendas...")
+# Carregamos o modelo uma vez quando este arquivo é lido pelo servidor Django
+captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
+print("Modelo de IA carregado e pronto para uso.")
+
 
 
 class PhotoListAPIView(APIView):
@@ -27,11 +36,14 @@ class PhotoListAPIView(APIView):
     def post(self, request):
         serializer = PhotoSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            image_file = serializer.validated_data['image']
+            pil_image = Image.open(image_file).convert("RGB")
+            generated_caption_result = captioner(pil_image)
+            generated_caption = generated_caption_result[0]['generated_text']
+            print(f"Legenda Gerada pela IA: {generated_caption}")
+            serializer.save(caption=generated_caption)
             # Retornamos os dados do objeto recém-criado e um status HTTP "201 CREATED".
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PhotoDetailAPIView(APIView):

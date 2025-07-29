@@ -1,0 +1,40 @@
+/* Arquivo: frontend/src/index.css */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+
+/* Definindo nossas variáveis de cor para o tema */
+:root {
+  --background-color: #121212; /* Um preto mais profundo */
+  --card-background: rgba(
+    30,
+    30,
+    30,
+    0.75
+  ); /* Fundo do card semi-transparente */
+  --border-color: #333;
+  --text-primary: #e0e0e0; /* Texto principal mais suave */
+  --text-secondary: #a0a0a0; /* Texto secundário */
+  --accent-color: #007bff; /* Azul vibrante para destaque */
+}
+
+/* Reset básico e configurações globais */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #ffffff;
+}
