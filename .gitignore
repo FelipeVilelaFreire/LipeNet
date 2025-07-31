@@ -248,3 +248,5 @@ dist/
 .eslintcache
 .stylelintcache
 .vite-node-cache/
+
+instrucoes.txt

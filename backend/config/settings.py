@@ -131,5 +131,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173', # O endereço do nosso app React
+    'http://localhost:5173',
+    'http://localhost:5174', # Adicionando portas comuns do Vite
+    'http://localhost:5175', # Adicionando a porta do seu erro
 ]

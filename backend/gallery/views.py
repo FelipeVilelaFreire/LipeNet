@@ -2,10 +2,12 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Photo,Tag
-from .serializers import PhotoSerializer
+from .models import Photo,Tag, Person
+from .serializers import PhotoSerializer,PersonSerializer
 from PIL import Image
 from transformers import pipeline
+import face_recognition
+import numpy as np
 
 # --- Carregamento do Modelo de IA ---
 print("Carregando o modelo de IA para geração de legendas...")
@@ -14,6 +16,13 @@ captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captionin
 object_detector = pipeline("object-detection", model="facebook/detr-resnet-50")         #Gerar tags
 print("Modelos de IA carregados.")
 
+print("Carregando rostos conhecidos do banco de dados...")
+known_face_encodings = []
+known_face_names = []
+for person in Person.objects.all():
+    known_face_encodings.append(person.encoding)
+    known_face_names.append(person.name)
+print(f"{len(known_face_names)} rostos conhecidos carregados.")
 
 
 class PhotoListAPIView(APIView):
@@ -34,34 +43,67 @@ class PhotoListAPIView(APIView):
         #    que o DRF consegue facilmente converter para JSON.
         return Response(serializer.data)
 
+    # Dentro da classe PhotoListAPIView em backend/gallery/views.py
+
     def post(self, request):
         serializer = PhotoSerializer(data=request.data)
         if serializer.is_valid():
             image_file = serializer.validated_data['image']
             pil_image = Image.open(image_file).convert("RGB")
+
+            # --- IA de Legenda (Como já estava) ---
             generated_caption = captioner(pil_image)[0]['generated_text']
 
-            # Primeiro, salvamos a foto com a legenda para obter um objeto com ID
+            # Salvamos primeiro para ter uma instância da foto
             photo_instance = serializer.save(caption=generated_caption)
 
+            # --- IA de Detecção de Objetos (Como já estava) ---
             detected_objects = object_detector(pil_image)
-
-            # Criamos um conjunto para evitar tags duplicadas
-            print("--- OBJETOS DETECTADOS PELA IA (ANTES DO FILTRO) ---")
-            print(detected_objects)
             found_tags = set()
+
             for obj in detected_objects:
-                tag_name = obj['label']
-                # Adicionamos apenas tags com uma pontuação de confiança razoável
-                if obj['score'] > 0.8:
-                    found_tags.add(tag_name)
-
-            # Para cada nome de tag encontrado, pegamos ou criamos o objeto Tag
+                if obj['score'] > 0.85:
+                    found_tags.add(obj['label'])
             for tag_name in found_tags:
-                tag, created = Tag.objects.get_or_create(name=tag_name)
-                photo_instance.tags.add(tag)  # Associamos a tag à foto
+                tag, _ = Tag.objects.get_or_create(name=tag_name)
+                photo_instance.tags.add(tag)
 
-            # Precisamos reserializar a instância para incluir as tags na resposta
+            # --- NOVA LÓGICA DE RECONHECIMENTO FACIAL ---
+            print("Iniciando reconhecimento facial...")
+            numpy_image = np.array(pil_image)
+
+            face_locations = face_recognition.face_locations(numpy_image)
+            # LINHA DE DEPURAÇÃO 1: Vamos ver se algum rosto foi encontrado
+            print(f"--- Depuração Facial: {len(face_locations)} rosto(s) encontrado(s) na imagem.")
+
+            face_encodings = face_recognition.face_encodings(numpy_image, face_locations)
+            # LINHA DE DEPURAÇÃO 2: Vamos ver se algum "encoding" foi gerado
+            print(f"--- Depuração Facial: {len(face_encodings)} encoding(s) de rosto gerado(s).")
+
+            for face_encoding in face_encodings:
+                # Comparamos o rosto encontrado com nossos rostos conhecidos
+                matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+                name = "Pessoa Desconhecida"
+
+                if True in matches:
+                    first_match_index = matches.index(True)
+                    name = known_face_names[first_match_index]
+                    print(f"Rosto conhecido encontrado: {name}")
+                    person = Person.objects.get(name=name)
+                    photo_instance.persons.add(person)
+                else:
+                    # Se for um rosto novo, criamos um novo registro de Pessoa
+                    # Nota: em um app real, teríamos uma interface para o usuário dar o nome
+                    new_person = Person.objects.create(name=f"Pessoa Desconhecida #{Person.objects.count() + 1}",
+                                                       encoding=list(face_encoding))
+                    photo_instance.persons.add(new_person)
+                    print(f"Novo rosto detectado e salvo como {new_person.name}")
+                    # Adicionamos ao nosso cache em memória para reconhecê-lo na mesma sessão
+                    known_face_encodings.append(list(face_encoding))
+                    known_face_names.append(new_person.name)
+
+            # -------------------------------------------
+
             final_serializer = PhotoSerializer(photo_instance)
             return Response(final_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -100,3 +142,29 @@ class PhotoDetailAPIView(APIView):
             photo.delete()
             # Para um delete bem-sucedido, retornamos uma resposta "Sem Conteúdo".
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+class PersonDetailAPIView(APIView):
+    """
+    View para buscar e atualizar os dados de uma única pessoa.
+    """
+    def get_object(self, pk):
+        try:
+            return Person.objects.get(pk=pk)
+        except Person.DoesNotExist:
+            raise Http404
+
+    # Método para buscar os dados de uma pessoa (GET)
+    def get(self, request, pk):
+        person = self.get_object(pk)
+        serializer = PersonSerializer(person)
+        return Response(serializer.data)
+
+    # Método para atualizar os dados de uma pessoa (PATCH)
+    def patch(self, request, pk):
+        person = self.get_object(pk)
+        # Usamos partial=True para permitir atualizações parciais (só o nome)
+        serializer = PersonSerializer(person, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

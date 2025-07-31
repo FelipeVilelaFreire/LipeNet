@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PhotoListAPIView, PhotoDetailAPIView
+from .views import PhotoListAPIView, PhotoDetailAPIView,PersonDetailAPIView
 
 app_name = 'gallery'
 
@@ -9,4 +9,7 @@ urlpatterns = [
 
     # NOSSA NOVA ROTA para uma foto específica (GET, PUT, DELETE)
     path('api/photos/<int:pk>/', PhotoDetailAPIView.as_view(), name='photo-detail'),
+
+    path('api/persons/<int:pk>/', PersonDetailAPIView.as_view(), name='person-detail'),
+
 ]
