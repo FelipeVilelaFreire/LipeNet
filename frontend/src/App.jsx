@@ -5,17 +5,18 @@ import axios from 'axios';
 import Header from './components/Header';
 import PhotoGallery from './components/PhotoGallery';
 import UploadForm from './components/UploadForm';
-import Container from 'react-bootstrap/Container';
+import ManagePeoplePage from './pages/ManagePeoplePage';
+import './App.css'; // Importa nosso CSS do App
+import PersonDetailPage from './pages/PersonDetailPage';
+
 
 function App() {
   const [photos, setPhotos] = useState([]);
 
   useEffect(() => {
-    // ... (a lógica de buscar fotos que já tínhamos continua igual)
-    axios
-      .get("http://127.0.0.1:8000/api/photos/")
-      .then((response) => setPhotos(response.data))
-      .catch((error) => console.error("Erro:", error));
+    axios.get('http://127.0.0.1:8000/api/photos/')
+      .then(response => setPhotos(response.data))
+      .catch(error => console.error("Erro:", error));
   }, []);
 
   const handlePhotoUpload = (newPhoto) => {
@@ -25,15 +26,14 @@ function App() {
   return (
     <div>
       <Header />
-      {/* Adicionamos um Container para centralizar e alinhar o conteúdo */}
-      <Container className="mt-4">
-        <main>
-          <Routes>
-            <Route path="/" element={<PhotoGallery photos={photos} />} />
-            <Route path="/upload" element={<UploadForm onPhotoUpload={handlePhotoUpload} />} />
-          </Routes>
-        </main>
-      </Container>
+      <main className="app-main-content">
+        <Routes>
+          <Route path="/" element={<PhotoGallery photos={photos} />} />
+          <Route path="/upload" element={<UploadForm onPhotoUpload={handlePhotoUpload} />} />
+          <Route path="/people" element={<ManagePeoplePage />} />
+          <Route path="/people/:personId" element={<PersonDetailPage />} />
+        </Routes>
+      </main>
     </div>
   );
 }

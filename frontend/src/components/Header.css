@@ -1,0 +1,38 @@
+/* Arquivo: src/components/Header.css */
+.app-header {
+  background-color: #2d3748; /* Fundo cinza escuro */
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-brand h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #ffffff;
+}
+
+.header-brand p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #a0aec0;
+}
+
+.header-nav a {
+  color: #e2e8f0;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 20px;
+  transition: color 0.2s ease-in-out;
+}
+
+.header-nav a:hover {
+  color: var(--accent-color);
+}
