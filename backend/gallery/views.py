@@ -11,6 +11,7 @@ from PIL import Image
 from transformers import pipeline
 import face_recognition
 import numpy as np
+from django.db.models import Q
 
 # --- Carregamento do Modelo de IA ---
 print("Carregando o modelo de IA para geração de legendas...")
@@ -195,3 +196,35 @@ class PersonPhotoListAPIView(APIView):
             return Response(serializer.data)
         except Person.DoesNotExist:
             raise Http404
+
+
+class SearchView(APIView):
+    """
+    View para realizar uma busca de texto nas fotos.
+    A busca é feita no texto do usuário, na legenda da IA, nas tags e nas pessoas.
+    """
+    def get(self, request):
+        # 1. Pegamos o termo de busca da URL (ex: /api/search/?query=praia)
+        query = request.query_params.get('query', None)
+
+        if query is None:
+            # Se nenhuma busca for fornecida, retornamos uma lista vazia.
+            return Response([], status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Construímos a nossa busca complexa com Q objects
+        #    O 'icontains' significa "contém, ignorando maiúsculas/minúsculas".
+        search_filter = (
+            Q(text__icontains=query) |
+            Q(caption__icontains=query) |
+            Q(tags__name__icontains=query) |
+            Q(persons__name__icontains=query)
+        )
+
+        # 3. Aplicamos o filtro e removemos duplicatas
+        #    O .distinct() é crucial para não retornar a mesma foto várias vezes
+        #    se ela combinar com a busca em mais de um campo.
+        photos = Photo.objects.filter(search_filter).distinct()
+
+        # 4. Traduzimos os resultados para JSON e retornamos
+        serializer = PhotoSerializer(photos, many=True, context={'request': request})
+        return Response(serializer.data)

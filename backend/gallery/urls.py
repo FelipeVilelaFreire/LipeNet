@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PhotoListAPIView, PhotoDetailAPIView,PersonDetailAPIView,PersonListAPIView,PersonPhotoListAPIView
+from .views import PhotoListAPIView, PhotoDetailAPIView,PersonDetailAPIView,PersonListAPIView,PersonPhotoListAPIView,SearchView
 
 app_name = 'gallery'
 
@@ -16,4 +16,5 @@ urlpatterns = [
 
     path('api/persons/<int:pk>/photos/', PersonPhotoListAPIView.as_view(), name='person-photo-list'),
 
+    path('api/search/', SearchView.as_view(), name='photo-search'),
 ]
