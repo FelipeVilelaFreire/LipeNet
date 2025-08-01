@@ -12,6 +12,13 @@ class Person(models.Model):
     name = models.CharField(max_length=100)
     # JSONField é perfeito para armazenar a lista de 128 números do encoding.
     encoding = models.JSONField()
+    photo_principal = models.ForeignKey(
+        'Photo',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='main_photo_for_person'
+    )
 
     def __str__(self):
         return self.name

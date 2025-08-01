@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module='torch.nn.modules.module')
+warnings.filterwarnings("ignore", category=FutureWarning, module='transformers.models.auto.modeling_auto')
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,6 +19,7 @@ captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captionin
 object_detector = pipeline("object-detection", model="facebook/detr-resnet-50")         #Gerar tags
 print("Modelos de IA carregados.")
 
+# --- Carregamento dos Rostos Conhecidos ---
 print("Carregando rostos conhecidos do banco de dados...")
 known_face_encodings = []
 known_face_names = []
@@ -143,6 +147,16 @@ class PhotoDetailAPIView(APIView):
             # Para um delete bem-sucedido, retornamos uma resposta "Sem Conteúdo".
             return Response(status=status.HTTP_204_NO_CONTENT)
 
+class PersonListAPIView(APIView):
+    """
+    View para listar todas as pessoas no banco de dados.
+    """
+    def get(self, request):
+        persons = Person.objects.all().order_by('name')
+        # Adicionamos o 'context' aqui para que o serializer tenha acesso ao request
+        serializer = PersonSerializer(persons, many=True, context={'request': request})
+        return Response(serializer.data)
+
 class PersonDetailAPIView(APIView):
     """
     View para buscar e atualizar os dados de uma única pessoa.
@@ -156,7 +170,7 @@ class PersonDetailAPIView(APIView):
     # Método para buscar os dados de uma pessoa (GET)
     def get(self, request, pk):
         person = self.get_object(pk)
-        serializer = PersonSerializer(person)
+        serializer = PersonSerializer(person, context={'request': request})
         return Response(serializer.data)
 
     # Método para atualizar os dados de uma pessoa (PATCH)
@@ -168,3 +182,16 @@ class PersonDetailAPIView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PersonPhotoListAPIView(APIView):
+    """
+    View para listar todas as fotos associadas a uma única pessoa.
+    """
+    def get(self, request, pk):
+        try:
+            person = Person.objects.get(pk=pk)
+            photos = person.photo_set.all() # Busca todas as fotos relacionadas a esta pessoa
+            serializer = PhotoSerializer(photos, many=True, context={'request': request})
+            return Response(serializer.data)
+        except Person.DoesNotExist:
+            raise Http404

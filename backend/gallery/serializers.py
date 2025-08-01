@@ -11,8 +11,19 @@ class PhotoSerializer(serializers.ModelSerializer):
         fields = ['id', 'text', 'image', 'caption', 'created_at', 'tags', 'persons']
 
 class PersonSerializer(serializers.ModelSerializer):
+    representative_photo = serializers.SerializerMethodField()
+
     class Meta:
         model = Person
-        fields = ['id', 'name', 'encoding']
-        # Definimos o encoding como "somente leitura"
+        # O nome do campo no JSON continua 'representative_photo' para não quebrar nosso frontend
+        fields = ['id', 'name', 'encoding', 'representative_photo']
         read_only_fields = ['encoding']
+
+    # --- LÓGICA ATUALIZADA ---
+    def get_representative_photo(self, person_obj):
+        # A lógica agora é muito mais simples e rápida!
+        if person_obj.photo_principal:
+            request = self.context.get('request')
+            # Acessamos diretamente a foto principal que está linkada
+            return request.build_absolute_uri(person_obj.photo_principal.image.url)
+        return None
