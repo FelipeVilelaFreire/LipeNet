@@ -7,7 +7,6 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
-
 class Person(models.Model):
     name = models.CharField(max_length=100)
     # JSONField é perfeito para armazenar a lista de 128 números do encoding.
