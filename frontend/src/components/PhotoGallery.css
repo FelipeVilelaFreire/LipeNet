@@ -1,11 +1,210 @@
+/* Arquivo: frontend/src/components/PhotoGallery.css */
 .gallery-container {
-  /* Define a largura máxima que nossa galeria pode ter */
-  max-width: 1200px;
+  margin-bottom: var(--space-2xl);
+}
 
-  /* O truque para centralizar um container com largura definida */
-  margin-left: auto;
-  margin-right: auto;
+.gallery-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+  animation: fadeIn 0.8s ease-out;
+}
 
-  /* Um pouco de espaçamento interno para não colar nas bordas em telas menores */
-  padding: 20px;
+.gallery-header h2 {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-md);
+  background: linear-gradient(
+    135deg,
+    var(--primary-600) 0%,
+    var(--secondary-600) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gallery-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Layout Masonry */
+.masonry-gallery {
+  columns: 4;
+  column-gap: var(--space-lg);
+  margin: 0 auto;
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: var(--space-lg);
+  animation: fadeIn 0.6s ease-out;
+  transition: all var(--transition-normal);
+}
+
+.masonry-item:hover {
+  transform: translateY(-4px);
+}
+
+/* Responsividade do Masonry */
+@media (max-width: 1200px) {
+  .masonry-gallery {
+    columns: 3;
+  }
+}
+
+@media (max-width: 900px) {
+  .masonry-gallery {
+    columns: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .masonry-gallery {
+    columns: 1;
+  }
+}
+
+/* Estado vazio com mais elementos interativos */
+.gallery-empty-state {
+  text-align: center;
+  padding: var(--space-3xl) var(--space-xl);
+  background: linear-gradient(
+    135deg,
+    var(--background-card) 0%,
+    var(--primary-50) 100%
+  );
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-lg);
+  animation: float 3s ease-in-out infinite;
+  display: block;
+}
+
+.gallery-empty-state h3 {
+  font-size: 1.8rem;
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.gallery-empty-state p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Skeleton melhorado com emojis */
+.skeleton-title {
+  height: 2.5rem;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-md);
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-subtitle {
+  height: 1.2rem;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-md);
+  width: 60%;
+  margin: 0 auto;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-item {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.skeleton-card {
+  background: var(--background-card);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+}
+
+.skeleton-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.skeleton-image {
+  height: 200px;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-content {
+  padding: var(--space-lg);
+}
+
+.skeleton-text {
+  height: 1rem;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-text-large {
+  height: 1.2rem;
+  width: 80%;
+}
+
+.skeleton-text-medium {
+  height: 1rem;
+  width: 60%;
+}
+
+.skeleton-text:last-child {
+  margin-bottom: 0;
+}
+
+/* Animações adicionais */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

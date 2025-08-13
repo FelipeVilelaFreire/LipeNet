@@ -1,6 +1,166 @@
 /* Arquivo: src/App.css */
 .app-main-content {
-  max-width: 1200px; /* Limita a largura do conteúdo */
-  margin: 0 auto; /* Centraliza na página */
-  padding: 2rem; /* Adiciona espaçamento interno */
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+  min-height: calc(100vh - 120px);
+}
+
+/* Container principal com gradiente sutil */
+.app-main-content::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+      circle at 20% 80%,
+      var(--primary-50) 0%,
+      transparent 50%
+    ),
+    radial-gradient(circle at 80% 20%, var(--secondary-50) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, var(--accent-warm-50) 0%, transparent 50%);
+  z-index: -1;
+  opacity: 0.3;
+}
+
+/* Animações de entrada para o conteúdo */
+.app-main-content > * {
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Home Feed - Estilo Instagram */
+.home-feed {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.feed-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+  padding: var(--space-xl);
+  background: var(--background-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.feed-header h1 {
+  font-size: 2rem;
+  margin-bottom: var(--space-sm);
+  background: linear-gradient(
+    135deg,
+    var(--primary-600) 0%,
+    var(--secondary-600) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.feed-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.feed-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.feed-post {
+  background: var(--background-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+.feed-post:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Search Page */
+.search-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.search-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+  padding: var(--space-xl);
+  background: var(--background-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.search-header h1 {
+  font-size: 2rem;
+  margin-bottom: var(--space-sm);
+  background: linear-gradient(
+    135deg,
+    var(--primary-600) 0%,
+    var(--secondary-600) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.search-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.search-results {
+  margin-top: var(--space-2xl);
+  padding: var(--space-xl);
+  background: var(--background-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.search-results h2 {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-lg);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .app-main-content {
+    padding: var(--space-lg) var(--space-md);
+  }
+  
+  .feed-header,
+  .search-header {
+    padding: var(--space-lg);
+  }
+  
+  .feed-header h1,
+  .search-header h1 {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-main-content {
+    padding: var(--space-md) var(--space-sm);
+  }
+  
+  .feed-header,
+  .search-header {
+    padding: var(--space-md);
+  }
+  
+  .feed-header h1,
+  .search-header h1 {
+    font-size: 1.5rem;
+  }
 }

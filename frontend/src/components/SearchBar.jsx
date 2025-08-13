@@ -1,39 +1,38 @@
 // Arquivo: src/components/SearchBar.jsx
-import { useState } from 'react';
-import './SearchBar.css';
+import { useState, useEffect } from "react";
+import "./SearchBar.css";
 
-// O componente recebe uma função 'onSearch' via props do pai (App.jsx)
 function SearchBar({ onSearch }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
 
-  const handleInputChange = (event) => {
-    const newSearchTerm = event.target.value;
-    setSearchTerm(newSearchTerm);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
 
-    // Limpa o "timer" antigo a cada nova letra digitada
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout);
-    }
+    return () => clearTimeout(timer);
+  }, [query]);
 
-    // Cria um novo "timer"
-    const newTimeout = setTimeout(() => {
-      // Quando o timer terminar, chama a função de busca do pai
-      onSearch(newSearchTerm);
-    }, 500); // Espera 500ms (meio segundo)
+  useEffect(() => {
+    onSearch(debouncedQuery);
+  }, [debouncedQuery, onSearch]);
 
-    setDebounceTimeout(newTimeout);
+  const handleChange = (event) => {
+    setQuery(event.target.value);
   };
 
   return (
     <div className="search-container">
-      <input
-        type="text"
-        className="search-input"
-        placeholder="Pesquisar por pessoas, lugares ou objetos..."
-        value={searchTerm}
-        onChange={handleInputChange}
-      />
+      <div className="search-input-wrapper">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Pesquise por fotos, pessoas, objetos ou momentos especiais..."
+          value={query}
+          onChange={handleChange}
+        />
+      </div>
     </div>
   );
 }

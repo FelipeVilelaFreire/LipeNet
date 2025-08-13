@@ -1,104 +1,447 @@
-/* Arquivo: src/pages/ManagePeoplePage.css */
-
+/* Arquivo: frontend/src/pages/ManagePeoplePage.css */
 .people-container {
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-2xl) 0;
 }
 
-.people-list {
-  list-style: none;
-  padding: 0;
+.people-header {
+  text-align: center;
+  margin-bottom: var(--space-3xl);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.people-header h2 {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-md);
+  background: linear-gradient(
+    135deg,
+    var(--primary-600) 0%,
+    var(--secondary-600) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.people-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.people-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 25px; /* Aumentamos o espaço */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-xl);
+  margin: 0 auto;
 }
 
-.people-list-item {
+.person-card {
+  background: var(--background-card);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-normal);
+  position: relative;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.person-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-2xl);
+}
+
+.person-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--primary-500) 0%,
+    var(--secondary-500) 50%,
+    var(--accent-warm-500) 100%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.person-card:hover::before {
+  opacity: 1;
+}
+
+/* Foto da Pessoa */
+.person-photo-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    var(--primary-50) 0%,
+    var(--secondary-50) 100%
+  );
+}
+
+.person-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.person-card:hover .person-photo {
+  transform: scale(1.05);
+}
+
+.person-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    var(--neutral-100) 0%,
+    var(--neutral-200) 100%
+  );
+}
+
+.placeholder-icon {
+  font-size: 3rem;
+  color: var(--neutral-400);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.photo-count-badge {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  background: var(--secondary-500);
+  color: white;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  box-shadow: var(--shadow-md);
+  border: 2px solid white;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Informações da Pessoa */
+.person-info {
+  padding: var(--space-lg);
+}
+
+.person-details {
+  text-align: center;
+}
+
+.person-name-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all var(--transition-fast);
+}
+
+.person-name-link:hover {
+  transform: scale(1.02);
+}
+
+.person-name {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.person-stats {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: var(--space-md);
+}
+
+.edit-name-btn {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  border: 1px solid var(--primary-200);
+  padding: var(--space-sm);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.edit-name-btn:hover {
+  background: var(--primary-200);
+  color: var(--primary-800);
+  transform: scale(1.1);
+}
+
+/* Edição Inline */
+.edit-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  border: 1px solid var(--border-color);
-  border-radius: 12px; /* Bordas mais arredondadas */
-  background-color: var(--card-background);
-  text-align: center;
-  position: relative;
-  transition: all 0.3s ease; /* Transição suave para todos os efeitos */
-  cursor: pointer; /* Muda o cursor para indicar que é clicável */
-}
-
-/* Novo efeito de hover no card inteiro */
-.people-list-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-  border-color: var(--accent-color);
-}
-
-.person-link {
-    text-decoration: none; /* Remove o sublinhado padrão do link */
-}
-
-.person-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #4A5568; /* Borda cinza padrão */
-  margin-bottom: 15px;
-  transition: border-color 0.3s ease;
-}
-
-/* Muda a cor da borda do avatar no hover do card */
-.people-list-item:hover .person-avatar {
-    border-color: var(--accent-color);
-}
-
-.person-name-display {
-  font-size: 1.2em;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 10px;
-  min-height: 40px;
-  transition: color 0.3s ease;
-}
-
-/* Muda a cor do nome no hover do card */
-.people-list-item:hover .person-name-display {
-    color: var(--accent-color);
+  gap: var(--space-sm);
 }
 
 .edit-input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid var(--accent-color);
-  border-radius: 4px;
-  background-color: #333;
-  color: var(--text-primary);
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid var(--primary-300);
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-family: inherit;
   outline: none;
+  transition: all var(--transition-fast);
   text-align: center;
-  margin-bottom: 10px;
-  font-size: 1.2em;
 }
 
-.icon-button {
-  background-color: #4A5568;
-  border: none;
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
+.edit-input:focus {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.edit-actions {
   display: flex;
+  gap: var(--space-sm);
   justify-content: center;
-  align-items: center;
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  transition: background-color 0.2s ease;
-  z-index: 2; /* Garante que o botão fique acima de qualquer link */
 }
 
-.icon-button:hover {
-  background-color: var(--accent-color);
+.action-btn {
+  padding: var(--space-xs) var(--space-sm);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  width: 35px;
+  height: 35px;
+}
+
+.save-btn {
+  background: var(--secondary-500);
+  color: white;
+}
+
+.save-btn:hover {
+  background: var(--secondary-600);
+  transform: scale(1.1);
+}
+
+.cancel-btn {
+  background: var(--neutral-300);
+  color: var(--neutral-700);
+}
+
+.cancel-btn:hover {
+  background: var(--neutral-400);
+  transform: scale(1.1);
+}
+
+/* Estado Vazio */
+.people-empty-state {
+  text-align: center;
+  padding: var(--space-3xl) var(--space-xl);
+  background: linear-gradient(
+    135deg,
+    var(--background-card) 0%,
+    var(--primary-50) 100%
+  );
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-lg);
+  animation: float 3s ease-in-out infinite;
+  display: block;
+}
+
+.people-empty-state h3 {
+  font-size: 1.8rem;
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.people-empty-state p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Skeleton Loading */
+.people-page-skeleton {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.skeleton-card {
+  background: var(--background-card);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+}
+
+.skeleton-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.skeleton-photo {
+  height: 200px;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-content {
+  padding: var(--space-lg);
+}
+
+.skeleton-name {
+  height: 1.5rem;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-stats {
+  height: 1rem;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  width: 60%;
+  margin: 0 auto;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-title {
+  height: 2.5rem;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-md);
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-subtitle {
+  height: 1.2rem;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-100) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-md);
+  width: 60%;
+  margin: 0 auto;
+  animation: shimmer 2s infinite;
+}
+
+/* Animações */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .people-container {
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  .people-header h2 {
+    font-size: 2rem;
+  }
+
+  .people-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--space-lg);
+  }
+
+  .person-info {
+    padding: var(--space-md);
+  }
+
+  .person-name {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .people-container {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .people-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .people-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .person-info {
+    padding: var(--space-sm);
+  }
+
+  .person-name {
+    font-size: 1.2rem;
+  }
+
+  .edit-input {
+    font-size: 0.95rem;
+    padding: var(--space-xs) var(--space-sm);
+  }
 }

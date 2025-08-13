@@ -1,0 +1,424 @@
+/* Arquivo: frontend/src/components/UploadForm.css */
+.upload-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-2xl) 0;
+}
+
+.upload-header {
+  text-align: center;
+  margin-bottom: var(--space-3xl);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.upload-header h2 {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-md);
+  background: linear-gradient(
+    135deg,
+    var(--primary-600) 0%,
+    var(--secondary-600) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.upload-header p {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.upload-form-container {
+  background: var(--background-card);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  animation: slideInUp 0.6s ease-out;
+}
+
+.upload-form {
+  padding: var(--space-2xl);
+}
+
+/* Área de Drag & Drop */
+.drag-drop-area {
+  border: 3px dashed var(--border-medium);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3xl);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background: var(--background-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.drag-drop-area::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    var(--primary-50) 0%,
+    var(--secondary-50) 50%,
+    var(--accent-warm-50) 100%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.drag-drop-area:hover::before {
+  opacity: 0.3;
+}
+
+.drag-drop-area:hover {
+  border-color: var(--primary-400);
+  background: var(--primary-50);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.drag-drop-area.drag-active {
+  border-color: var(--primary-500);
+  background: var(--primary-100);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-xl);
+}
+
+.drag-drop-area.drag-active::before {
+  opacity: 0.5;
+}
+
+.drag-drop-area.has-preview {
+  border-color: var(--secondary-500);
+  background: var(--secondary-50);
+}
+
+.drag-content {
+  position: relative;
+  z-index: 2;
+}
+
+.drag-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-lg);
+  display: block;
+  animation: float 3s ease-in-out infinite;
+}
+
+.drag-content h3 {
+  font-size: 1.8rem;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.drag-content p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.drag-hint {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  border: 1px solid var(--primary-200);
+}
+
+/* Preview da Imagem */
+.preview-container {
+  position: relative;
+  z-index: 2;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 3px solid var(--secondary-200);
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  background: var(--error);
+  color: white;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: var(--radius-full);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+}
+
+.remove-image-btn:hover {
+  background: var(--error);
+  transform: scale(1.1);
+}
+
+.remove-image-btn::before {
+  content: "✕";
+}
+
+.file-input {
+  display: none;
+}
+
+/* Campo de Descrição */
+.form-group {
+  margin: var(--space-xl) 0;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+  font-size: 1.1rem;
+}
+
+.description-input {
+  width: 100%;
+  padding: var(--space-lg);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all var(--transition-normal);
+  background: var(--background-card);
+  color: var(--text-primary);
+}
+
+.description-input:focus {
+  outline: none;
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 4px var(--primary-100);
+  transform: translateY(-1px);
+}
+
+.description-input:hover {
+  border-color: var(--primary-300);
+}
+
+/* Barra de Progresso */
+.upload-progress {
+  margin: var(--space-xl) 0;
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: var(--neutral-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-sm);
+  box-shadow: inset 0 2px 4px rgba(28, 25, 23, 0.1);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--primary-500) 0%,
+    var(--secondary-500) 50%,
+    var(--accent-warm-500) 100%
+  );
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+.progress-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Botão de Envio */
+.submit-btn {
+  width: 100%;
+  padding: var(--space-lg) var(--space-xl);
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--secondary-500) 50%,
+    var(--accent-warm-500) 100%
+  );
+  color: white;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  box-shadow: var(--shadow-lg);
+}
+
+.submit-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-xl);
+}
+
+.submit-btn:active {
+  transform: translateY(-1px);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.submit-btn.uploading {
+  background: linear-gradient(
+    135deg,
+    var(--neutral-500) 0%,
+    var(--neutral-600) 100%
+  );
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: var(--space-sm);
+}
+
+/* Animações */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .upload-container {
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  .upload-header h2 {
+    font-size: 2rem;
+  }
+
+  .upload-form {
+    padding: var(--space-xl);
+  }
+
+  .drag-drop-area {
+    padding: var(--space-2xl) var(--space-xl);
+  }
+
+  .drag-content h3 {
+    font-size: 1.5rem;
+  }
+
+  .submit-btn {
+    font-size: 1.1rem;
+    padding: var(--space-md) var(--space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-container {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .upload-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .upload-form {
+    padding: var(--space-lg);
+  }
+
+  .drag-drop-area {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .drag-content h3 {
+    font-size: 1.3rem;
+  }
+
+  .submit-btn {
+    font-size: 1rem;
+    padding: var(--space-sm) var(--space-md);
+  }
+}
+
+
