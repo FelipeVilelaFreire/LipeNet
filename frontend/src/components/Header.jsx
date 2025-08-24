@@ -1,42 +1,60 @@
-// Arquivo: src/components/Header.jsx
-import { Link } from "react-router-dom";
-import "./Header.css";
+import { Link, useLocation } from 'react-router-dom';
+import { Home, Camera, Upload, Search, Users, Menu, X } from 'lucide-react';
+import { useState } from 'react';
+import './Header.css';
 
 function Header() {
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navItems = [
+    { path: '/', label: 'Início', icon: Home },
+    { path: '/gallery', label: 'Galeria', icon: Camera },
+    { path: '/search', label: 'Busca', icon: Search },
+    { path: '/upload', label: 'Adicionar', icon: Upload },
+    { path: '/people', label: 'Pessoas', icon: Users },
+  ];
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
   return (
     <header className="app-header">
       <div className="header-container">
-        <div className="header-brand">
-          <h1>FamilyTV</h1>
-          <p>Conectando famílias através de memórias</p>
-        </div>
-        
-        <nav className="header-nav">
-          <Link to="/" className="nav-link">
-            <span className="nav-icon">🏠</span>
-            <span className="nav-text">Home</span>
-          </Link>
-          
-          <Link to="/gallery" className="nav-link">
-            <span className="nav-icon">🖼️</span>
-            <span className="nav-text">Galeria</span>
-          </Link>
-          
-          <Link to="/upload" className="nav-link">
-            <span className="nav-icon">📤</span>
-            <span className="nav-text">Upload</span>
-          </Link>
-          
-          <Link to="/search" className="nav-link">
-            <span className="nav-icon">🔍</span>
-            <span className="nav-text">Buscar</span>
-          </Link>
-          
-          <Link to="/people" className="nav-link">
-            <span className="nav-icon">👥</span>
-            <span className="nav-text">Pessoas</span>
-          </Link>
+        <Link to="/" className="header-brand">
+          <div className="brand-icon">
+            <Camera />
+          </div>
+          <div className="brand-text">
+            <h1>LipeNet</h1>
+            <span>Memórias em Família</span>
+          </div>
+        </Link>
+
+        <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-link ${isActive(item.path) ? 'active' : ''}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Icon className="nav-icon" />
+                <span className="nav-text">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
+
+        <button 
+          className="mobile-menu-toggle"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X /> : <Menu />}
+        </button>
       </div>
     </header>
   );

@@ -188,6 +188,9 @@ cython_debug/
 #  you could uncomment the following to ignore the entire vscode folder
 # .vscode/
 
+# Claude Code - configurações locais do Claude
+.claude/
+
 # Ruff stuff:
 .ruff_cache/
 
@@ -250,3 +253,117 @@ dist/
 .vite-node-cache/
 
 instrucoes.txt
+
+referencia_visual
+
+# =================================
+# Arquivos específicos do Windows
+# =================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Scripts temporários criados para Windows
+frontend/dev.cmd
+frontend/run-dev.ps1
+frontend/.npmrc
+
+# Lock files do npm (opcional - você pode querer manter)
+# package-lock.json
+
+# Arquivos de build do Vite
+frontend/dist-ssr
+*.local
+
+# Editor directories and files
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Logs do sistema
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage de testes
+coverage/
+*.lcov
+.nyc_output
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Yarn
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# pnpm
+pnpm-lock.yaml
+
+# Parcel cache
+.parcel-cache
+
+# Next.js
+.next/
+out/
+
+# Nuxt.js
+.nuxt
+dist
+
+# Gatsby
+.cache/
+public
+
+# VuePress
+.vuepress/dist
+
+# Serverless
+.serverless/
+
+# FuseBox
+.fusebox/
+
+# DynamoDB Local
+.dynamodb/
+
+# TernJS
+.tern-port
+
+# Stores VSCode versions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
