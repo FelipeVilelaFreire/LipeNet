@@ -6,13 +6,11 @@ from transformers import OwlViTProcessor, OwlViTForObjectDetection
 def analisar_imagem_com_owl(caminho_ou_url, etiquetas_candidatas, is_url=False):
     print("--- INICIANDO EXPERIMENTO OWL-ViT (V3 - SEM DUPLICATAS) ---")
 
-    # --- 1. Carregar o modelo e o processador ---
     print("Carregando modelo e processador...")
     processor = OwlViTProcessor.from_pretrained("google/owlvit-base-patch32")
     model = OwlViTForObjectDetection.from_pretrained("google/owlvit-base-patch32")
     print("Modelo carregado com sucesso.")
 
-    # --- 2. Carregar a imagem ---
     try:
         if is_url:
             image = Image.open(requests.get(caminho_ou_url, stream=True).raw).convert("RGB")
@@ -42,16 +40,12 @@ def analisar_imagem_com_owl(caminho_ou_url, etiquetas_candidatas, is_url=False):
     if not scores:
         print("Nenhum objeto encontrado.")
     else:
-        # ############################################################### #
-        # NOVA LÓGICA PARA EVITAR DUPLICATAS                              #
-        # ############################################################### #
         etiquetas_ja_exibidas = set() # Usamos um 'set' para eficiência
         resultados_ordenados = sorted(zip(scores, labels), key=lambda x: x[0], reverse=True)
 
         for score, label_index in resultados_ordenados:
             etiqueta_detectada = etiquetas_candidatas[label_index]
 
-            # Verificamos se já exibimos esta etiqueta
             if etiqueta_detectada not in etiquetas_ja_exibidas:
                 # Se for nova, a exibimos...
                 print(f"  - Objeto: '{etiqueta_detectada}' | Confiança: {score:.2f}")

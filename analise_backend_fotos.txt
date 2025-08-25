@@ -1,0 +1,168 @@
+================================================================================
+                   ANÁLISE DO BACKEND - SISTEMA DE FOTOS LIPENET
+================================================================================
+
+1. VISÃO GERAL DO SISTEMA
+================================================================================
+O LipeNet é um sistema de galeria de fotos inteligente que utiliza IA para:
+- Gerar legendas automáticas para fotos
+- Detectar objetos e criar tags
+- Reconhecer faces e associar pessoas
+- Permitir busca avançada por texto, tags e pessoas
+
+2. ARQUITETURA DO BACKEND
+================================================================================
+Framework: Django 5.2.4 + Django REST Framework 3.16.0
+Banco de Dados: SQLite3
+API: RESTful com endpoints para CRUD de fotos e pessoas
+
+3. MODELOS DE DADOS (gallery/models.py)
+================================================================================
+
+Tag:
+- name: CharField (nome único da tag)
+
+Person:
+- name: CharField (nome da pessoa)
+- encoding: JSONField (vetor de 128 números para reconhecimento facial)
+- photo_principal: ForeignKey para Photo (foto representativa da pessoa)
+
+Photo:
+- text: TextField (descrição manual do usuário)
+- image: ImageField (arquivo da imagem)
+- caption: TextField (legenda gerada por IA)
+- created_at: DateTimeField (timestamp do upload)
+- tags: ManyToManyField com Tag
+- persons: ManyToManyField com Person
+
+4. PRINCIPAIS FUNCIONALIDADES DE PROCESSAMENTO DE FOTOS
+================================================================================
+
+4.1 UPLOAD E PROCESSAMENTO (views.py:53-115)
+--------------------------------------------
+Quando uma foto é enviada:
+1. Abre a imagem com PIL (Pillow)
+2. Gera legenda automática usando IA
+3. Detecta objetos e cria tags
+4. Reconhece faces e associa pessoas
+5. Salva tudo no banco de dados
+
+4.2 GERAÇÃO DE LEGENDAS
+-----------------------
+- Modelo: nlpconnect/vit-gpt2-image-captioning
+- Pipeline: image-to-text da Transformers
+- Processo: Analisa a imagem e gera descrição textual em inglês
+
+4.3 DETECÇÃO DE OBJETOS E TAGS
+-------------------------------
+- Modelo: facebook/detr-resnet-50
+- Pipeline: object-detection da Transformers
+- Threshold: 0.85 (85% de confiança mínima)
+- Cria tags automaticamente para objetos detectados
+
+4.4 RECONHECIMENTO FACIAL
+--------------------------
+- Biblioteca: face_recognition (baseada em dlib)
+- Processo:
+  1. Detecta faces na imagem (face_locations)
+  2. Gera encoding de 128 dimensões para cada face
+  3. Compara com faces conhecidas no banco
+  4. Se reconhecida: associa à pessoa existente
+  5. Se nova: cria nova pessoa como "Pessoa Desconhecida #X"
+- Cache em memória para melhor performance
+
+5. BIBLIOTECAS DE PROCESSAMENTO DE IMAGEM
+================================================================================
+
+PRINCIPAIS:
+- Pillow (PIL) 11.0.0: Manipulação básica de imagens
+- face_recognition 1.3.0: Reconhecimento facial
+- dlib: Backend para face_recognition
+- transformers 4.54.1: Modelos de IA da Hugging Face
+- torch (PyTorch) 2.5.1: Framework de deep learning
+- torchvision 0.22.1: Visão computacional com PyTorch
+- timm 1.0.19: Modelos de visão computacional
+
+SUPORTE:
+- numpy 2.2.6: Operações com arrays (para face_recognition)
+- huggingface-hub 0.34.3: Download de modelos
+- safetensors 0.5.3: Formato seguro para tensores
+- tokenizers 0.21.4: Tokenização para transformers
+
+6. ENDPOINTS DA API REST
+================================================================================
+
+/api/photos/
+- GET: Lista todas as fotos
+- POST: Upload de nova foto com processamento IA
+
+/api/photos/<id>/
+- GET: Detalhes de uma foto
+- PUT: Atualizar foto
+- DELETE: Remover foto
+
+/api/persons/
+- GET: Lista todas as pessoas
+
+/api/persons/<id>/
+- GET: Detalhes de uma pessoa
+- PATCH: Atualizar nome da pessoa
+
+/api/persons/<id>/photos/
+- GET: Todas as fotos de uma pessoa
+
+/api/search/?query=<termo>
+- GET: Busca em texto, caption, tags e pessoas
+
+7. FLUXO DE DADOS
+================================================================================
+
+Upload de Foto:
+1. Frontend envia imagem via POST
+2. Backend recebe e valida com PhotoSerializer
+3. PIL abre e converte para RGB
+4. IA gera caption
+5. IA detecta objetos → cria tags
+6. face_recognition processa faces
+7. Associa pessoas (existentes ou novas)
+8. Salva tudo no banco
+9. Retorna JSON com todos os dados
+
+Busca:
+1. Frontend envia query string
+2. Backend usa Q objects para busca complexa
+3. Busca em: text, caption, tags.name, persons.name
+4. Retorna fotos distintas que correspondem
+
+8. CONFIGURAÇÕES IMPORTANTES
+================================================================================
+
+- CORS habilitado para localhost:5173-5175 (frontend Vite)
+- Media files em /media/photos/
+- Debug mode ativo (desenvolvimento)
+- SQLite como banco de dados
+- django-cors-headers para permitir requisições do frontend
+
+9. OTIMIZAÇÕES E CACHE
+================================================================================
+
+- Modelos de IA carregados uma vez na inicialização
+- Cache em memória de faces conhecidas
+- Uso de distinct() para evitar duplicatas em buscas
+- Campo photo_principal em Person para acesso rápido
+
+10. SERIALIZERS (gallery/serializers.py)
+================================================================================
+
+PhotoSerializer:
+- Campos: id, text, image, caption, created_at, tags, persons
+- Tags e persons como StringRelatedField (read-only)
+
+PersonSerializer:
+- Campos: id, name, encoding, representative_photo
+- representative_photo: método customizado para URL da foto
+- encoding é read-only
+
+================================================================================
+                              FIM DA ANÁLISE
+================================================================================

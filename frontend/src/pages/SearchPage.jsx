@@ -29,7 +29,7 @@ const SearchPage = () => {
       setHasSearched(true);
 
       try {
-        const response = await fetch(`http://localhost:8000/api/gallery/photos/search/?q=${encodeURIComponent(term)}`);
+        const response = await fetch(`http://localhost:8000/api/search/?query=${encodeURIComponent(term)}`);
         if (response.ok) {
           const data = await response.json();
           setSearchResults(data);

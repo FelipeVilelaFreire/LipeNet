@@ -15,7 +15,7 @@ const GalleryPage = () => {
 
   const fetchPhotos = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/gallery/photos/');
+const response = await fetch('http://localhost:8000/api/photos/');
       if (response.ok) {
         const data = await response.json();
         setPhotos(data);

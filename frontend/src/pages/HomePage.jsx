@@ -19,7 +19,7 @@ function HomePage() {
 
   const fetchRecentPhotos = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/gallery/photos/');
+      const response = await fetch('http://localhost:8000/api/photos/');
       if (response.ok) {
         const data = await response.json();
         setRecentPhotos(data.slice(0, 6));
@@ -31,8 +31,8 @@ function HomePage() {
 
   const fetchStats = async () => {
     try {
-      const photosResponse = await fetch('http://localhost:8000/api/gallery/photos/');
-      const peopleResponse = await fetch('http://localhost:8000/api/gallery/people/');
+      const photosResponse = await fetch('http://localhost:8000/api/photos/');
+      const peopleResponse = await fetch('http://localhost:8000/api/persons/');
       
       if (photosResponse.ok && peopleResponse.ok) {
         const photos = await photosResponse.json();
