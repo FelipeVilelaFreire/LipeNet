@@ -1,5 +1,6 @@
 // Arquivo: src/components/SearchBar.jsx
 import { useState, useEffect } from "react";
+import { Search } from 'lucide-react';
 import "./SearchBar.css";
 
 function SearchBar({ onSearch }) {
@@ -32,6 +33,7 @@ function SearchBar({ onSearch }) {
           value={query}
           onChange={handleChange}
         />
+        <Search className="search-icon" />
       </div>
     </div>
   );

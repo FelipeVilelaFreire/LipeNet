@@ -1,197 +1,301 @@
 import warnings
+
 warnings.filterwarnings("ignore", category=UserWarning, module='torch.nn.modules.module')
 warnings.filterwarnings("ignore", category=FutureWarning, module='transformers.models.auto.modeling_auto')
+
 from django.http import Http404
+from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Photo,Tag, Person
-from .serializers import PhotoSerializer,PersonSerializer
 from PIL import Image
 from transformers import pipeline
 import face_recognition
 import numpy as np
-from django.db.models import Q
+from collections import Counter
 
-# --- Carregamento do Modelo de IA ---
-print("Carregando o modelo de IA para geração de legendas...")
-# Carregamos o modelo uma vez quando este arquivo é lido pelo servidor Django
-captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")     #Image-to-text geral
-object_detector = pipeline("object-detection", model="facebook/detr-resnet-50")         #Gerar tags
-print("Modelos de IA carregados.")
+from .models import Photo, Tag, Person
+from .serializers import PhotoSerializer, PersonSerializer
 
-# --- Carregamento dos Rostos Conhecidos ---
-print("Carregando rostos conhecidos do banco de dados...")
+# Carregamento dos modelos IA
+print("Carregando modelos de IA...")
+captioner = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
+object_detector = pipeline("object-detection", model="facebook/detr-resnet-50")
+print("Modelos carregados.")
+
+# Cache de rostos conhecidos
 known_face_encodings = []
 known_face_names = []
 for person in Person.objects.all():
     known_face_encodings.append(person.encoding)
     known_face_names.append(person.name)
-print(f"{len(known_face_names)} rostos conhecidos carregados.")
+print(f"{len(known_face_names)} rostos carregados.")
+
+
+def enhance_description(basic_caption, detected_objects, pil_image):
+    """Enriquece a descrição básica com contexto visual"""
+    enhanced_parts = [basic_caption]
+
+    # Adiciona objetos principais
+    main_objects = []
+    for obj in detected_objects:
+        if obj['score'] > 0.85:
+            obj_name = obj['label'].replace('_', ' ').replace('-', ' ')
+            main_objects.append(obj_name)
+
+    if main_objects:
+        unique_objects = list(set(main_objects))[:4]
+        if len(unique_objects) > 1:
+            enhanced_parts.append(f"showing {', '.join(unique_objects[:-1])} and {unique_objects[-1]}")
+        else:
+            enhanced_parts.append(f"featuring {unique_objects[0]}")
+
+    # Análise de cores e iluminação
+    try:
+        img_sample = pil_image.resize((64, 64))
+        avg_color = np.mean(np.array(img_sample), axis=(0, 1))
+
+        # Temperatura de cor
+        if avg_color[0] > avg_color[1] + 25 and avg_color[0] > avg_color[2] + 25:
+            enhanced_parts.append("with warm reddish lighting")
+        elif avg_color[2] > avg_color[0] + 25 and avg_color[2] > avg_color[1] + 25:
+            enhanced_parts.append("with cool blue tones")
+        elif avg_color[1] > avg_color[0] + 20 and avg_color[1] > avg_color[2] + 20:
+            enhanced_parts.append("with natural green ambiance")
+
+        # Nível de brilho
+        brightness = np.mean(avg_color)
+        if brightness > 190:
+            enhanced_parts.append("in bright conditions")
+        elif brightness < 80:
+            enhanced_parts.append("in low-light setting")
+        elif brightness > 140:
+            enhanced_parts.append("in good lighting")
+
+    except Exception:
+        pass
+
+    return " ".join(enhanced_parts)
+
+
+def generate_smart_tags(detected_objects, pil_image):
+    """Gera tags contextuais baseadas em objetos e cores"""
+    found_tags = set()
+    object_counts = Counter()
+
+    # Tags de objetos detectados
+    for obj in detected_objects:
+        if obj['score'] > 0.75:
+            tag_name = obj['label'].lower().replace('_', ' ').replace('-', ' ')
+            object_counts[tag_name] += 1
+            found_tags.add(tag_name)
+
+    objects_list = list(object_counts.keys())
+
+    # Tags contextuais por categoria
+    context_mapping = {
+        'transportation': ['car', 'truck', 'bus', 'motorcycle', 'bicycle'],
+        'nature': ['tree', 'grass', 'flower', 'plant', 'leaf'],
+        'architecture': ['building', 'house', 'skyscraper'],
+        'furniture': ['chair', 'table', 'couch', 'bed', 'desk'],
+        'food': ['food', 'cake', 'pizza', 'sandwich', 'fruit'],
+        'animal': ['cat', 'dog', 'bird', 'horse'],
+        'technology': ['book', 'laptop', 'phone', 'computer']
+    }
+
+    for context, keywords in context_mapping.items():
+        if any(obj in objects_list for obj in keywords):
+            found_tags.add(context)
+
+    # Tags específicas para pessoas
+    if any(obj in objects_list for obj in ['person', 'people']):
+        if object_counts.get('person', 0) > 1:
+            found_tags.update(['group', 'social'])
+        else:
+            found_tags.add('portrait')
+
+    # Ambiente (indoor/outdoor)
+    if any(obj in objects_list for obj in ['tree', 'grass', 'sky', 'cloud']):
+        found_tags.add('outdoor')
+    elif any(obj in objects_list for obj in ['chair', 'table', 'bed', 'wall']):
+        found_tags.add('indoor')
+
+    # Análise de cores
+    try:
+        img_small = pil_image.resize((32, 32))
+        avg_color = np.mean(np.array(img_small), axis=(0, 1))
+
+        # Dominância de cor
+        if avg_color[0] > avg_color[1] + 30 and avg_color[0] > avg_color[2] + 30:
+            found_tags.add('warm colors')
+        elif avg_color[2] > avg_color[0] + 30 and avg_color[2] > avg_color[1] + 30:
+            found_tags.add('cool colors')
+        elif avg_color[1] > avg_color[0] + 25 and avg_color[1] > avg_color[2] + 25:
+            found_tags.add('natural colors')
+
+        # Brilho e saturação
+        brightness = np.mean(avg_color)
+        saturation = np.std(avg_color)
+
+        if brightness > 200:
+            found_tags.update(['bright', 'high contrast'])
+        elif brightness < 80:
+            found_tags.update(['dark', 'moody'])
+
+        if saturation > 40:
+            found_tags.update(['vibrant', 'colorful'])
+        elif saturation < 15:
+            found_tags.update(['monochrome', 'subtle'])
+
+    except Exception:
+        pass
+
+    return found_tags
+
+
+def process_facial_recognition(pil_image, photo_instance):
+    """Executa reconhecimento facial e associa pessoas à foto"""
+    global known_face_encodings, known_face_names
+
+    numpy_image = np.array(pil_image)
+    face_locations = face_recognition.face_locations(numpy_image)
+
+    if not face_locations:
+        print("Nenhum rosto encontrado")
+        return
+
+    print(f"Processando {len(face_locations)} rosto(s)")
+    face_encodings = face_recognition.face_encodings(numpy_image, face_locations)
+
+    for i, face_encoding in enumerate(face_encodings):
+        # Busca por rostos conhecidos
+        matches = face_recognition.compare_faces(
+            known_face_encodings,
+            face_encoding,
+            tolerance=0.6
+        )
+
+        if True in matches:
+            # Rosto conhecido encontrado
+            match_index = matches.index(True)
+            person_name = known_face_names[match_index]
+            person = Person.objects.get(name=person_name)
+            photo_instance.persons.add(person)
+            print(f"Rosto #{i + 1}: {person_name} (reconhecido)")
+        else:
+            # Novo rosto - criar nova pessoa
+            unknown_count = Person.objects.filter(name__startswith="Pessoa Desconhecida").count()
+            new_person = Person.objects.create(
+                name=f"Pessoa Desconhecida #{unknown_count + 1}",
+                encoding=list(face_encoding)
+            )
+            photo_instance.persons.add(new_person)
+            print(f"Rosto #{i + 1}: {new_person.name} (novo)")
+
+            # Atualiza cache de rostos conhecidos
+            known_face_encodings.append(list(face_encoding))
+            known_face_names.append(new_person.name)
 
 
 class PhotoListAPIView(APIView):
-    """
-    Esta View vai listar todas as fotos do banco de dados.
-    """
     def get(self, request):
-        # 1. Buscar todos os objetos 'Photo' no banco de dados.
         photos = Photo.objects.all()
-
-        # 2. Passar a lista de objetos para o nosso 'tradutor' (Serializer).
-        #    'many=True' é crucial aqui. Ele diz ao serializer que estamos passando
-        #    uma lista de objetos, e não apenas um.
         serializer = PhotoSerializer(photos, many=True)
-
-        # 3. Retornar a resposta.
-        #    'serializer.data' contém os dados já traduzidos para um formato
-        #    que o DRF consegue facilmente converter para JSON.
         return Response(serializer.data)
-
-    # Dentro da classe PhotoListAPIView em backend/gallery/views.py
 
     def post(self, request):
         serializer = PhotoSerializer(data=request.data)
-        if serializer.is_valid():
-            image_file = serializer.validated_data['image']
-            pil_image = Image.open(image_file).convert("RGB")
 
-            # --- IA de Legenda (Como já estava) ---
-            generated_caption = captioner(pil_image)[0]['generated_text']
-
-            # Salvamos primeiro para ter uma instância da foto
-            photo_instance = serializer.save(caption=generated_caption)
-
-            # --- IA de Detecção de Objetos (Como já estava) ---
-            detected_objects = object_detector(pil_image)
-            found_tags = set()
-
-            for obj in detected_objects:
-                if obj['score'] > 0.85:
-                    found_tags.add(obj['label'])
-            for tag_name in found_tags:
-                tag, _ = Tag.objects.get_or_create(name=tag_name)
-                photo_instance.tags.add(tag)
-
-            # --- NOVA LÓGICA DE RECONHECIMENTO FACIAL ---
-            print("Iniciando reconhecimento facial...")
-            numpy_image = np.array(pil_image)
-
-            face_locations = face_recognition.face_locations(numpy_image)
-            # LINHA DE DEPURAÇÃO 1: Vamos ver se algum rosto foi encontrado
-            print(f"--- Depuração Facial: {len(face_locations)} rosto(s) encontrado(s) na imagem.")
-
-            face_encodings = face_recognition.face_encodings(numpy_image, face_locations)
-            # LINHA DE DEPURAÇÃO 2: Vamos ver se algum "encoding" foi gerado
-            print(f"--- Depuração Facial: {len(face_encodings)} encoding(s) de rosto gerado(s).")
-
-            for face_encoding in face_encodings:
-                # Comparamos o rosto encontrado com nossos rostos conhecidos
-                matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-                name = "Pessoa Desconhecida"
-
-                if True in matches:
-                    first_match_index = matches.index(True)
-                    name = known_face_names[first_match_index]
-                    print(f"Rosto conhecido encontrado: {name}")
-                    person = Person.objects.get(name=name)
-                    photo_instance.persons.add(person)
-                else:
-                    # Se for um rosto novo, criamos um novo registro de Pessoa
-                    # Nota: em um app real, teríamos uma interface para o usuário dar o nome
-                    new_person = Person.objects.create(name=f"Pessoa Desconhecida #{Person.objects.count() + 1}",
-                                                       encoding=list(face_encoding))
-                    photo_instance.persons.add(new_person)
-                    print(f"Novo rosto detectado e salvo como {new_person.name}")
-                    # Adicionamos ao nosso cache em memória para reconhecê-lo na mesma sessão
-                    known_face_encodings.append(list(face_encoding))
-                    known_face_names.append(new_person.name)
-
-            # -------------------------------------------
-
-            final_serializer = PhotoSerializer(photo_instance)
-            return Response(final_serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class PhotoDetailAPIView(APIView):
-        """
-        View para buscar, atualizar ou deletar uma única instância de Photo.
-        """
-        def get_object(self, pk):
-            # Função auxiliar para pegar o objeto ou retornar um erro 404
-            try:
-                return Photo.objects.get(pk=pk)
-            except Photo.DoesNotExist:
-                raise Http404
-
-        def get(self, request, pk):
-            # Usamos nossa função auxiliar para pegar a foto
-            photo = self.get_object(pk)
-            # Usamos o MESMO serializer, mas sem 'many=True'
-            serializer = PhotoSerializer(photo)
-            return Response(serializer.data)
-
-        def put(self, request, pk):
-            photo = self.get_object(pk)
-            # Para atualizar, passamos a instância original E os novos dados.
-            serializer = PhotoSerializer(photo, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-
+        if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        def delete(self, request, pk):
-            photo = self.get_object(pk)
-            photo.delete()
-            # Para um delete bem-sucedido, retornamos uma resposta "Sem Conteúdo".
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        image_file = serializer.validated_data['image']
+        pil_image = Image.open(image_file).convert("RGB")
+
+        # 1. Geração de descrição avançada
+        print("Gerando descrição...")
+        basic_caption = captioner(pil_image)[0]['generated_text']
+        detected_objects = object_detector(pil_image)
+        enhanced_caption = enhance_description(basic_caption, detected_objects, pil_image)
+
+        photo_instance = serializer.save(caption=enhanced_caption)
+        print(f"Descrição: {enhanced_caption}")
+
+        # 2. Sistema de tags inteligentes
+        print("Gerando tags...")
+        smart_tags = generate_smart_tags(detected_objects, pil_image)
+        for tag_name in smart_tags:
+            tag, _ = Tag.objects.get_or_create(name=tag_name)
+            photo_instance.tags.add(tag)
+        print(f"Tags ({len(smart_tags)}): {', '.join(list(smart_tags)[:8])}")
+
+        # 3. Reconhecimento facial
+        print("Reconhecimento facial...")
+        process_facial_recognition(pil_image, photo_instance)
+
+        final_serializer = PhotoSerializer(photo_instance)
+        return Response(final_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class PhotoDetailAPIView(APIView):
+    def get_object(self, pk):
+        try:
+            return Photo.objects.get(pk=pk)
+        except Photo.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        photo = self.get_object(pk)
+        serializer = PhotoSerializer(photo)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        photo = self.get_object(pk)
+        serializer = PhotoSerializer(photo, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        photo = self.get_object(pk)
+        photo.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class PersonListAPIView(APIView):
-    """
-    View para listar todas as pessoas no banco de dados.
-    """
     def get(self, request):
         persons = Person.objects.all().order_by('name')
-        # Adicionamos o 'context' aqui para que o serializer tenha acesso ao request
         serializer = PersonSerializer(persons, many=True, context={'request': request})
         return Response(serializer.data)
 
+
 class PersonDetailAPIView(APIView):
-    """
-    View para buscar e atualizar os dados de uma única pessoa.
-    """
     def get_object(self, pk):
         try:
             return Person.objects.get(pk=pk)
         except Person.DoesNotExist:
             raise Http404
 
-    # Método para buscar os dados de uma pessoa (GET)
     def get(self, request, pk):
         person = self.get_object(pk)
         serializer = PersonSerializer(person, context={'request': request})
         return Response(serializer.data)
 
-    # Método para atualizar os dados de uma pessoa (PATCH)
     def patch(self, request, pk):
         person = self.get_object(pk)
-        # Usamos partial=True para permitir atualizações parciais (só o nome)
         serializer = PersonSerializer(person, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class PersonPhotoListAPIView(APIView):
-    """
-    View para listar todas as fotos associadas a uma única pessoa.
-    """
     def get(self, request, pk):
         try:
             person = Person.objects.get(pk=pk)
-            photos = person.photo_set.all() # Busca todas as fotos relacionadas a esta pessoa
+            photos = person.photo_set.all()
             serializer = PhotoSerializer(photos, many=True, context={'request': request})
             return Response(serializer.data)
         except Person.DoesNotExist:
@@ -199,32 +303,19 @@ class PersonPhotoListAPIView(APIView):
 
 
 class SearchView(APIView):
-    """
-    View para realizar uma busca de texto nas fotos.
-    A busca é feita no texto do usuário, na legenda da IA, nas tags e nas pessoas.
-    """
     def get(self, request):
-        # 1. Pegamos o termo de busca da URL (ex: /api/search/?query=praia)
         query = request.query_params.get('query', None)
 
         if query is None:
-            # Se nenhuma busca for fornecida, retornamos uma lista vazia.
             return Response([], status=status.HTTP_400_BAD_REQUEST)
 
-        # 2. Construímos a nossa busca complexa com Q objects
-        #    O 'icontains' significa "contém, ignorando maiúsculas/minúsculas".
         search_filter = (
-            Q(text__icontains=query) |
-            Q(caption__icontains=query) |
-            Q(tags__name__icontains=query) |
-            Q(persons__name__icontains=query)
+                Q(text__icontains=query) |
+                Q(caption__icontains=query) |
+                Q(tags__name__icontains=query) |
+                Q(persons__name__icontains=query)
         )
 
-        # 3. Aplicamos o filtro e removemos duplicatas
-        #    O .distinct() é crucial para não retornar a mesma foto várias vezes
-        #    se ela combinar com a busca em mais de um campo.
         photos = Photo.objects.filter(search_filter).distinct()
-
-        # 4. Traduzimos os resultados para JSON e retornamos
         serializer = PhotoSerializer(photos, many=True, context={'request': request})
         return Response(serializer.data)

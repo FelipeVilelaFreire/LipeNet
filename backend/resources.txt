@@ -1,0 +1,21 @@
+
+
+
+
+
+Captioner (nlpconnect/vit-gpt2-image-captioning): Um "Poeta" básico que já funciona.
+
+Object_detector (facebook/detr-resnet-50): Um "Observador" genérico e limitado.
+
+FaceRecognition: Nosso sistema sólido para identificar pessoas.
+
+
+O que já fizemos como experimento:
+
+✅ OWL-ViT (O Especialista): Concluímos com sucesso o owl_experimento.py. Vimos que ele é excelente em encontrar conceitos específicos ('dia de jogo no estádio') ]
+a partir de uma lista que nós controlamos, provando seu valor como "Especialista".
+
+Onde paramos exatamente:
+
+🎯 BLIP (O Poeta Melhorado): Nosso último passo foi criar o blip_experimento.py. Estávamos prestes a rodá-lo para ver a qualidade das legendas que ele gera
+ e compará-las com as do captioner antigo.

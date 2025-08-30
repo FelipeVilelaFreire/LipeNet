@@ -2,55 +2,59 @@
 .upload-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: var(--space-2xl) 0;
+  padding: var(--spacing-2xl) var(--spacing-lg);
 }
 
 .upload-header {
   text-align: center;
-  margin-bottom: var(--space-3xl);
+  margin-bottom: var(--spacing-2xl);
   animation: fadeIn 0.8s ease-out;
 }
 
 .upload-header h2 {
   font-size: 2.5rem;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--spacing-md);
   background: linear-gradient(
     135deg,
-    var(--primary-600) 0%,
-    var(--secondary-600) 100%
+    var(--color-primary) 0%,
+    var(--color-secondary) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
 }
 
 .upload-header p {
-  font-size: 1.2rem;
-  color: var(--text-secondary);
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
   margin: 0;
+  opacity: 0.9;
 }
 
 .upload-form-container {
-  background: var(--background-card);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-xl);
+  background: white;
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
-  animation: slideInUp 0.6s ease-out;
+  animation: scaleIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border: 1px solid rgba(212, 165, 116, 0.1);
 }
 
 .upload-form {
-  padding: var(--space-2xl);
+  padding: var(--spacing-2xl);
 }
 
 /* Área de Drag & Drop */
 .drag-drop-area {
-  border: 3px dashed var(--border-medium);
-  border-radius: var(--radius-xl);
-  padding: var(--space-3xl);
+  border: 3px dashed rgba(212, 165, 116, 0.3);
+  border-radius: 20px;
+  padding: 60px 40px;
   text-align: center;
   cursor: pointer;
   transition: all var(--transition-normal);
-  background: var(--background-secondary);
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.03) 0%, rgba(255, 255, 255, 0.8) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -64,9 +68,8 @@
   bottom: 0;
   background: linear-gradient(
     135deg,
-    var(--primary-50) 0%,
-    var(--secondary-50) 50%,
-    var(--accent-warm-50) 100%
+    var(--color-primary-light) 0%,
+    rgba(232, 184, 138, 0.1) 100%
   );
   opacity: 0;
   transition: opacity var(--transition-normal);
@@ -77,17 +80,17 @@
 }
 
 .drag-drop-area:hover {
-  border-color: var(--primary-400);
-  background: var(--primary-50);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: var(--shadow-hover);
 }
 
 .drag-drop-area.drag-active {
-  border-color: var(--primary-500);
-  background: var(--primary-100);
-  transform: scale(1.02);
-  box-shadow: var(--shadow-xl);
+  border-color: var(--color-primary);
+  background: rgba(212, 165, 116, 0.15);
+  transform: scale(1.03);
+  box-shadow: var(--shadow-hover);
 }
 
 .drag-drop-area.drag-active::before {
@@ -106,34 +109,37 @@
 
 .drag-icon {
   font-size: 4rem;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--spacing-lg);
   display: block;
   animation: float 3s ease-in-out infinite;
+  filter: grayscale(0.2);
 }
 
 .drag-content h3 {
   font-size: 1.8rem;
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+  font-weight: 600;
 }
 
 .drag-content p {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin-bottom: var(--space-md);
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  opacity: 0.9;
 }
 
 .drag-hint {
-  background: var(--primary-100);
-  color: var(--primary-700);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-full);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  padding: 8px 16px;
+  border-radius: 20px;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
-  border: 1px solid var(--primary-200);
+  gap: 8px;
+  border: 1px solid rgba(212, 165, 116, 0.2);
 }
 
 /* Preview da Imagem */
@@ -145,21 +151,21 @@
 .image-preview {
   max-width: 100%;
   max-height: 300px;
-  border-radius: var(--radius-lg);
+  border-radius: 16px;
   box-shadow: var(--shadow-lg);
-  border: 3px solid var(--secondary-200);
+  border: 3px solid rgba(212, 165, 116, 0.2);
 }
 
 .remove-image-btn {
   position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
-  background: var(--error);
+  top: 12px;
+  right: 12px;
+  background: var(--color-error);
   color: white;
   border: none;
-  width: 35px;
-  height: 35px;
-  border-radius: var(--radius-full);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   font-size: 1.1rem;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -170,8 +176,8 @@
 }
 
 .remove-image-btn:hover {
-  background: var(--error);
-  transform: scale(1.1);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: var(--shadow-lg);
 }
 
 .remove-image-btn::before {
@@ -184,66 +190,67 @@
 
 /* Campo de Descrição */
 .form-group {
-  margin: var(--space-xl) 0;
+  margin: var(--spacing-xl) 0;
 }
 
 .form-group label {
   display: block;
   font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
-  font-size: 1.1rem;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+  font-size: 1.05rem;
+  letter-spacing: 0.3px;
 }
 
 .description-input {
   width: 100%;
-  padding: var(--space-lg);
-  border: 2px solid var(--border-light);
-  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  border: 2px solid rgba(212, 165, 116, 0.15);
+  border-radius: 12px;
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
   transition: all var(--transition-normal);
-  background: var(--background-card);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-primary);
 }
 
 .description-input:focus {
   outline: none;
-  border-color: var(--primary-400);
-  box-shadow: 0 0 0 4px var(--primary-100);
-  transform: translateY(-1px);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(212, 165, 116, 0.15);
+  transform: translateY(-2px);
+  background: white;
 }
 
 .description-input:hover {
-  border-color: var(--primary-300);
+  border-color: rgba(212, 165, 116, 0.25);
 }
 
 /* Barra de Progresso */
 .upload-progress {
-  margin: var(--space-xl) 0;
+  margin: var(--spacing-xl) 0;
   text-align: center;
 }
 
 .progress-bar {
   width: 100%;
   height: 12px;
-  background: var(--neutral-200);
-  border-radius: var(--radius-full);
+  background: rgba(212, 165, 116, 0.1);
+  border-radius: 50px;
   overflow: hidden;
-  margin-bottom: var(--space-sm);
-  box-shadow: inset 0 2px 4px rgba(28, 25, 23, 0.1);
+  margin-bottom: var(--spacing-sm);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .progress-fill {
   height: 100%;
   background: linear-gradient(
     90deg,
-    var(--primary-500) 0%,
-    var(--secondary-500) 50%,
-    var(--accent-warm-500) 100%
+    var(--color-primary) 0%,
+    var(--color-accent) 100%
   );
-  border-radius: var(--radius-full);
+  border-radius: 50px;
   transition: width var(--transition-normal);
   position: relative;
   overflow: hidden;
@@ -267,24 +274,23 @@
 
 .progress-text {
   font-size: 0.95rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 /* Botão de Envio */
 .submit-btn {
   width: 100%;
-  padding: var(--space-lg) var(--space-xl);
+  padding: 18px 32px;
   background: linear-gradient(
     135deg,
-    var(--primary-500) 0%,
-    var(--secondary-500) 50%,
-    var(--accent-warm-500) 100%
+    var(--color-primary) 0%,
+    var(--color-secondary) 100%
   );
   color: white;
   border: none;
-  border-radius: var(--radius-xl);
-  font-size: 1.2rem;
+  border-radius: 30px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-normal);
@@ -293,13 +299,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
-  box-shadow: var(--shadow-lg);
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(212, 165, 116, 0.35);
+  letter-spacing: 0.5px;
 }
 
 .submit-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-xl);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-hover);
 }
 
 .submit-btn:active {
@@ -315,8 +322,8 @@
 .submit-btn.uploading {
   background: linear-gradient(
     135deg,
-    var(--neutral-500) 0%,
-    var(--neutral-600) 100%
+    #999 0%,
+    #777 100%
   );
 }
 

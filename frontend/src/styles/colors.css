@@ -1,26 +1,29 @@
 :root {
-  /* Paleta de cores quentes e acolhedoras - baseada na referência visual */
-  --color-background: #faf9f7;
-  --color-foreground: #2d2a27;
+  /* Paleta de cores moderna e elegante */
+  --color-background: linear-gradient(135deg, #fdfcfb 0%, #f9f6f3 100%);
+  --color-background-solid: #fdfcfb;
+  --color-foreground: #1a1816;
   --color-card: #ffffff;
-  --color-card-foreground: #2d2a27;
+  --color-card-foreground: #1a1816;
   
-  /* Cores principais - tons terrosos */
-  --color-primary: #c4a484; /* Terracota suave */
+  /* Cores principais - tons premium */
+  --color-primary: #d4a574; /* Dourado elegante */
   --color-primary-foreground: #ffffff;
-  --color-primary-hover: #b39374;
-  --color-secondary: #e6ddd4; /* Creme */
-  --color-secondary-foreground: #2d2a27;
-  --color-muted: #f0ebe5;
-  --color-muted-foreground: #6b6358;
-  --color-accent: #a8b5a0; /* Verde sálvia */
-  --color-accent-foreground: #ffffff;
+  --color-primary-hover: #c19660;
+  --color-primary-light: rgba(212, 165, 116, 0.1);
+  --color-secondary: #8b7355; /* Marrom sofisticado */
+  --color-secondary-foreground: #ffffff;
+  --color-secondary-hover: #7a6349;
+  --color-muted: #f5f1ed;
+  --color-muted-foreground: #6b5d52;
+  --color-accent: #e8b88a; /* Pêssego suave */
+  --color-accent-foreground: #1a1816;
   
   /* Cores de sistema */
-  --color-success: #a8b5a0;
-  --color-warning: #d4a574;
-  --color-error: #d4183d;
-  --color-info: #8db4d8;
+  --color-success: #6ece94;
+  --color-warning: #f5a623;
+  --color-error: #e74c3c;
+  --color-info: #5dade2;
   
   /* Cores de texto */
   --color-text-primary: #2d2a27;
@@ -40,11 +43,13 @@
   --color-border-hover: rgba(196, 164, 132, 0.3);
   --color-border-active: rgba(196, 164, 132, 0.4);
   
-  /* Sombras */
-  --shadow-sm: 0 1px 2px 0 rgba(45, 42, 39, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(45, 42, 39, 0.1), 0 2px 4px -1px rgba(45, 42, 39, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(45, 42, 39, 0.1), 0 4px 6px -2px rgba(45, 42, 39, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(45, 42, 39, 0.1), 0 10px 10px -5px rgba(45, 42, 39, 0.04);
+  /* Sombras modernas */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 12px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15), 0 12px 24px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 8px 16px rgba(212, 165, 116, 0.15), 0 4px 8px rgba(212, 165, 116, 0.1);
+  --shadow-glow: 0 0 20px rgba(212, 165, 116, 0.3);
   
   /* Overlays */
   --color-overlay-light: rgba(255, 255, 255, 0.9);
@@ -81,10 +86,11 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 2rem;
   
-  /* Transições */
-  --transition-fast: 150ms ease;
-  --transition-normal: 300ms ease;
-  --transition-slow: 500ms ease;
+  /* Transições suaves */
+  --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 /* Tema escuro */

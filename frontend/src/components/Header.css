@@ -1,10 +1,24 @@
 .app-header {
-  background: white;
-  border-bottom: 1px solid #f0f0f0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(212, 165, 116, 0.1);
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  transition: all var(--transition-normal);
+}
+
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  opacity: 0.3;
 }
 
 .header-container {
@@ -27,19 +41,42 @@
 }
 
 .header-brand:hover {
-  transform: scale(1.02);
+  transform: scale(1.03);
+}
+
+.header-brand:hover .brand-icon {
+  transform: rotate(5deg) scale(1.05);
+  box-shadow: 0 8px 25px rgba(212, 165, 116, 0.4);
+}
+
+.header-brand:hover .brand-text h1 {
+  letter-spacing: 0.5px;
 }
 
 .brand-icon {
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #d4a574 0%, #c19a6b 100%);
-  border-radius: 15px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 5px 15px rgba(196, 164, 132, 0.3);
+  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.35);
+  transition: all var(--transition-spring);
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-icon::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  animation: pulse 3s ease-in-out infinite;
 }
 
 .brand-icon svg {
@@ -48,14 +85,17 @@
 }
 
 .brand-text h1 {
-  font-size: 26px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #d4a574 0%, #c19a6b 100%);
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
   line-height: 1;
+  letter-spacing: -0.5px;
+  transition: all var(--transition-normal);
+  font-family: 'Playfair Display', serif;
 }
 
 .brand-text span {
@@ -77,30 +117,68 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
-  border-radius: 25px;
-  color: #666;
+  padding: 12px 24px;
+  border-radius: 28px;
+  color: var(--color-text-secondary);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
   position: relative;
   font-weight: 500;
+  overflow: hidden;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  transform: translate(-50%, -50%);
+  transition: width var(--transition-normal), height var(--transition-normal);
 }
 
 .nav-link:hover {
-  color: #c19a6b;
-  background: #fef5ed;
+  color: var(--color-primary);
   transform: translateY(-2px);
 }
 
+.nav-link:hover::before {
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+}
+
+.nav-link:hover .nav-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
 .nav-link.active {
-  background: linear-gradient(135deg, #d4a574 0%, #c19a6b 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(196, 164, 132, 0.3);
+  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.35);
+  font-weight: 600;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--color-accent), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.3;
 }
 
 .nav-icon {
   width: 20px;
   height: 20px;
+  transition: transform var(--transition-fast);
 }
 
 .nav-text {
@@ -121,8 +199,9 @@
 }
 
 .mobile-menu-toggle:hover {
-  background: #fef5ed;
-  color: #c19a6b;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  transform: rotate(90deg);
 }
 
 .mobile-menu-toggle svg {
@@ -163,6 +242,18 @@
     transform: translateY(0);
     opacity: 1;
     visibility: visible;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   .nav-link {
