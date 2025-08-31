@@ -1,50 +1,53 @@
 /* UploadPage Styles */
 .upload-page {
-  min-height: calc(100vh - 70px);
-  background: var(--color-background);
-  padding: var(--spacing-2xl) 0;
+  min-height: 100vh;
+  background: #fafafa;
+  padding: 60px 0;
 }
 
 .upload-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 0 var(--spacing-lg);
+  padding: 0 24px;
 }
 
 .upload-header {
   text-align: center;
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: 40px;
   animation: fadeIn 0.6s ease;
 }
 
 .upload-header h1 {
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-sm);
+  font-size: 36px;
+  font-weight: 700;
+  color: #2c2c2c;
+  margin-bottom: 12px;
 }
 
 .upload-header p {
-  font-size: var(--font-size-lg);
-  color: var(--color-text-secondary);
+  font-size: 18px;
+  color: #666;
+  font-weight: 400;
 }
 
 /* Upload Form */
 .upload-form {
-  background: var(--color-card);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-xl);
-  box-shadow: var(--shadow-md);
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   animation: fadeIn 0.6s ease 0.2s both;
 }
 
 /* Dropzone */
 .dropzone {
-  border: 2px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-2xl);
+  border: 2px dashed #ddd;
+  border-radius: 16px;
+  padding: 48px;
   text-align: center;
   cursor: pointer;
-  transition: all var(--transition-normal);
-  background: var(--color-bg-secondary);
+  transition: all 0.3s ease;
+  background: #f9f9f9;
   position: relative;
   min-height: 300px;
   display: flex;
@@ -53,13 +56,13 @@
 }
 
 .dropzone:hover {
-  border-color: var(--color-primary);
-  background: var(--color-bg-tertiary);
+  border-color: var(--color-primary, #d4a574);
+  background: rgba(212, 165, 116, 0.05);
 }
 
 .dropzone.drag-active {
-  border-color: var(--color-primary);
-  background: var(--color-secondary);
+  border-color: var(--color-primary, #d4a574);
+  background: rgba(212, 165, 116, 0.1);
   transform: scale(1.02);
 }
 
@@ -78,7 +81,7 @@
 
 .dropzone-icon {
   font-size: 4rem;
-  color: var(--color-primary);
+  color: var(--color-primary, #d4a574);
   animation: pulse 2s ease infinite;
 }
 
@@ -365,44 +368,425 @@
   margin-bottom: var(--spacing-xl);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Tablet Responsive */
+@media (max-width: 1024px) {
+  .upload-page {
+    padding: 50px 0;
+  }
+
   .upload-container {
-    padding: 0 var(--spacing-md);
+    max-width: 700px;
+    padding: 0 20px;
+  }
+
+  .upload-header h1 {
+    font-size: 32px;
+  }
+
+  .upload-header p {
+    font-size: 17px;
   }
 
   .upload-form {
-    padding: var(--spacing-lg);
+    padding: 28px;
+  }
+
+  .dropzone {
+    min-height: 280px;
+    padding: 40px;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .upload-page {
+    padding: 40px 0;
+  }
+
+  .upload-container {
+    padding: 0 16px;
+  }
+
+  .upload-header {
+    margin-bottom: 32px;
+  }
+
+  .upload-header h1 {
+    font-size: 30px;
+    margin-bottom: 10px;
+  }
+
+  .upload-header p {
+    font-size: 16px;
+  }
+
+  .upload-form {
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   }
 
   .dropzone {
     min-height: 250px;
-    padding: var(--spacing-lg);
+    padding: 32px;
+    border-radius: 12px;
   }
 
   .dropzone-icon {
     font-size: 3rem;
   }
 
+  .dropzone-content h3 {
+    font-size: 18px;
+  }
+
+  .dropzone-content p {
+    font-size: 14px;
+  }
+
+  .file-types {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .preview-container {
+    min-height: 250px;
+    border-radius: 12px;
+  }
+
+  .image-preview {
+    max-height: 350px;
+  }
+
+  .remove-btn {
+    width: 36px;
+    height: 36px;
+    top: 12px;
+    right: 12px;
+  }
+
+  .remove-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .image-info {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .form-fields {
+    margin-top: 24px;
+    gap: 20px;
+  }
+
+  .form-group {
+    gap: 8px;
+  }
+
+  .form-group label {
+    font-size: 14px;
+  }
+
+  .form-input,
+  .form-textarea {
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+
+  .field-hint {
+    font-size: 12px;
+  }
+
   .form-actions {
     flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
   }
 
   .form-actions .btn {
     width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .upload-header h1 {
-    font-size: var(--font-size-2xl);
-  }
-
-  .dropzone-content h3 {
-    font-size: var(--font-size-lg);
+    padding: 14px;
+    font-size: 15px;
   }
 
   .upload-tips {
-    padding: var(--spacing-md);
+    margin-top: 32px;
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .upload-tips h4 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .upload-tips ul {
+    gap: 10px;
+  }
+
+  .upload-tips li {
+    font-size: 14px;
+    padding-left: 24px;
+  }
+
+  .upload-success {
+    padding: 32px 24px;
+    border-radius: 16px;
+  }
+
+  .success-icon {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 20px;
+  }
+
+  .success-icon svg {
+    width: 35px;
+    height: 35px;
+  }
+
+  .upload-success h2 {
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+
+  .upload-success p {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .upload-page {
+    padding: 32px 0;
+  }
+
+  .upload-container {
+    padding: 0 12px;
+  }
+
+  .upload-header {
+    margin-bottom: 28px;
+  }
+
+  .upload-header h1 {
+    font-size: 26px;
+    margin-bottom: 8px;
+  }
+
+  .upload-header p {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .upload-form {
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .dropzone {
+    min-height: 220px;
+    padding: 24px;
+    border-radius: 10px;
+    border-width: 1.5px;
+  }
+
+  .dropzone-icon {
+    font-size: 2.5rem;
+  }
+
+  .dropzone-content h3 {
+    font-size: 16px;
+  }
+
+  .dropzone-content p {
+    font-size: 13px;
+  }
+
+  .file-types {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .preview-container {
+    min-height: 220px;
+  }
+
+  .image-preview {
+    max-height: 300px;
+  }
+
+  .remove-btn {
+    width: 32px;
+    height: 32px;
+    top: 10px;
+    right: 10px;
+  }
+
+  .remove-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .image-info {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .image-info span {
+    font-size: 12px;
+  }
+
+  .file-size {
+    font-size: 11px;
+  }
+
+  .form-fields {
+    margin-top: 20px;
+    gap: 16px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .form-input,
+  .form-textarea {
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+
+  .form-textarea {
+    min-height: 80px;
+  }
+
+  .field-hint {
+    font-size: 11px;
+  }
+
+  .upload-progress-container {
+    margin-top: 16px;
+  }
+
+  .progress-bar {
+    height: 5px;
+  }
+
+  .progress-text {
+    font-size: 12px;
+  }
+
+  .form-actions {
+    margin-top: 20px;
+    gap: 10px;
+  }
+
+  .form-actions .btn {
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+
+  .form-actions svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+  }
+
+  .upload-tips {
+    margin-top: 28px;
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .upload-tips h4 {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .upload-tips ul {
+    gap: 8px;
+  }
+
+  .upload-tips li {
+    font-size: 13px;
+    padding-left: 20px;
+    line-height: 1.5;
+  }
+
+  .upload-success {
+    padding: 28px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .success-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+  }
+
+  .success-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .upload-success h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .upload-success p {
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 360px) {
+  .upload-header h1 {
+    font-size: 22px;
+  }
+
+  .upload-header p {
+    font-size: 13px;
+  }
+
+  .dropzone {
+    min-height: 200px;
+    padding: 20px;
+  }
+
+  .dropzone-icon {
+    font-size: 2rem;
+  }
+
+  .dropzone-content h3 {
+    font-size: 14px;
+  }
+
+  .dropzone-content p {
+    font-size: 12px;
+  }
+
+  .form-input,
+  .form-textarea {
+    font-size: 12px;
+  }
+
+  .form-actions .btn {
+    padding: 10px;
+    font-size: 13px;
   }
 }

@@ -5,6 +5,7 @@ from .views import (
     PersonDetailAPIView,
     PersonListAPIView,
     PersonPhotoListAPIView,
+    UpdatePersonPhotoAPIView,
     SearchView
 )
 
@@ -15,6 +16,7 @@ urlpatterns = [
     path('api/photos/<int:pk>/', PhotoDetailAPIView.as_view(), name='photo-detail'),
     path('api/persons/', PersonListAPIView.as_view(), name='person-list'),
     path('api/persons/<int:pk>/', PersonDetailAPIView.as_view(), name='person-detail'),
+    path('api/persons/<int:pk>/update-photo/', UpdatePersonPhotoAPIView.as_view(), name='person-update-photo'),
     path('api/persons/<int:pk>/photos/', PersonPhotoListAPIView.as_view(), name='person-photo-list'),
     path('api/search/', SearchView.as_view(), name='photo-search'),
 ]

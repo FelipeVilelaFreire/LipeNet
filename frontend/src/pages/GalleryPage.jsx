@@ -27,6 +27,10 @@ const response = await fetch('http://localhost:8000/api/photos/');
     }
   };
 
+  const handlePhotoDelete = (photoId) => {
+    setPhotos(prevPhotos => prevPhotos.filter(photo => photo.id !== photoId));
+  };
+
   const getSortedPhotos = () => {
     let sorted = [...photos];
     
@@ -139,7 +143,7 @@ const response = await fetch('http://localhost:8000/api/photos/');
       {filteredPhotos.length > 0 ? (
         <div className="gallery-grid">
           {filteredPhotos.map(photo => (
-            <PhotoCard key={photo.id} photo={photo} />
+            <PhotoCard key={photo.id} photo={photo} onDelete={handlePhotoDelete} />
           ))}
         </div>
       ) : (

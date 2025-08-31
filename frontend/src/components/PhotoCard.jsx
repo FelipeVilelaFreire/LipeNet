@@ -1,15 +1,89 @@
 import { useState } from "react";
-import { Calendar, Users, Tag } from 'lucide-react';
+import { Calendar, Users, Tag, ChevronLeft, ChevronRight, Download, Share2, Heart, Trash2 } from 'lucide-react';
 import "./PhotoCard.css";
 
-function PhotoCard({ photo }) {
+function PhotoCard({ photo, photos = [], currentIndex = 0, onDelete }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(currentIndex);
+  const [liked, setLiked] = useState(false);
 
-  // Construímos a URL completa para a imagem, adicionando o endereço do backend
-  const imageUrl = `http://127.0.0.1:8000${photo.image}`;
+  // A URL da imagem já vem completa do backend agora
+  const imageUrl = photo.image && photo.image.startsWith('http') 
+    ? photo.image 
+    : photo.image 
+      ? `http://127.0.0.1:8000${photo.image}`
+      : '/placeholder.jpg';
 
-  const openModal = () => setIsModalOpen(true);
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  const openModal = () => {
+    setIsModalOpen(true);
+    const photoIndex = photos.findIndex(p => p.id === photo.id);
+    if (photoIndex !== -1) {
+      setCurrentPhotoIndex(photoIndex);
+    }
+  };
+  
   const closeModal = () => setIsModalOpen(false);
+  
+  const navigatePhoto = (direction) => {
+    if (!photos || photos.length === 0) return;
+    
+    if (direction === 'next') {
+      setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
+    } else {
+      setCurrentPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
+    }
+  };
+  
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `photo-${photo.id}.jpg`;
+    link.click();
+  };
+  
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: photo.text || 'Foto',
+        text: photo.caption || '',
+        url: window.location.href
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('Tem certeza que deseja deletar esta foto?')) {
+      try {
+        const response = await fetch(`http://localhost:8000/api/photos/${displayPhoto.id}/`, {
+          method: 'DELETE',
+        });
+        
+        if (response.ok) {
+          closeModal();
+          if (onDelete) {
+            onDelete(displayPhoto.id);
+          }
+        } else {
+          alert('Erro ao deletar a foto');
+        }
+      } catch (error) {
+        console.error('Erro ao deletar foto:', error);
+        alert('Erro ao deletar a foto');
+      }
+    }
+  };
+  
+  const displayPhoto = photos && photos.length > 0 ? photos[currentPhotoIndex] : photo;
+  const displayImageUrl = displayPhoto.image && displayPhoto.image.startsWith('http') 
+    ? displayPhoto.image 
+    : displayPhoto.image 
+      ? `http://127.0.0.1:8000${displayPhoto.image}`
+      : '/placeholder.jpg';
 
   // Formatação da data
   const formatDate = (dateString) => {
@@ -27,10 +101,11 @@ function PhotoCard({ photo }) {
       <div className="photo-card" onClick={openModal}>
         <div className="card-image-container">
           <img
-            src={imageUrl}
+            src={imageError ? '/placeholder.jpg' : imageUrl}
             alt={photo.text || "Foto"}
             className="card-image"
             loading="lazy"
+            onError={handleImageError}
           />
         </div>
         <div className="card-body">
@@ -75,7 +150,7 @@ function PhotoCard({ photo }) {
         </div>
       </div>
 
-      {/* Modal Lightbox */}
+      {/* Modal Lightbox Enhanced */}
       {isModalOpen && (
         <div className="lightbox-modal" onClick={closeModal}>
           <div
@@ -86,29 +161,87 @@ function PhotoCard({ photo }) {
               ✕
             </button>
             
+            {/* Navigation Arrows */}
+            {photos && photos.length > 1 && (
+              <>
+                <button 
+                  className="lightbox-nav lightbox-nav-prev" 
+                  onClick={() => navigatePhoto('prev')}
+                  aria-label="Previous photo"
+                >
+                  <ChevronLeft size={30} />
+                </button>
+                <button 
+                  className="lightbox-nav lightbox-nav-next" 
+                  onClick={() => navigatePhoto('next')}
+                  aria-label="Next photo"
+                >
+                  <ChevronRight size={30} />
+                </button>
+              </>
+            )}
+            
             <div className="lightbox-image-container">
-              <img src={imageUrl} alt={photo.text || "Foto"} className="lightbox-image" />
+              <img 
+                src={imageError ? '/placeholder.jpg' : displayImageUrl} 
+                alt={displayPhoto.text || "Foto"} 
+                className="lightbox-image"
+                onError={handleImageError} 
+              />
+              
+              {/* Image Actions */}
+              <div className="lightbox-image-actions">
+                <button 
+                  className={`lightbox-action-btn ${liked ? 'liked' : ''}`}
+                  onClick={() => setLiked(!liked)}
+                  title="Curtir"
+                >
+                  <Heart size={20} fill={liked ? '#e74c3c' : 'none'} />
+                </button>
+                <button 
+                  className="lightbox-action-btn"
+                  onClick={handleDownload}
+                  title="Baixar"
+                >
+                  <Download size={20} />
+                </button>
+                <button 
+                  className="lightbox-action-btn"
+                  onClick={handleShare}
+                  title="Compartilhar"
+                >
+                  <Share2 size={20} />
+                </button>
+                <button 
+                  className="lightbox-action-btn delete-btn"
+                  onClick={handleDelete}
+                  title="Deletar"
+                >
+                  <Trash2 size={20} />
+                </button>
+              </div>
             </div>
             
             <div className="lightbox-info">
-              <h3>{photo.text || "Sem descrição"}</h3>
+              <h3>{displayPhoto.text || "Sem descrição"}</h3>
               
               <p className="lightbox-caption">
-                {photo.caption || "Processando legenda..."}
+                {displayPhoto.caption || "Processando legenda..."}
               </p>
               
               <div className="lightbox-meta">
                 <div className="meta-group">
                   <Calendar size={18} />
-                  <span>{formatDate(photo.created_at)}</span>
+                  <span>{formatDate(displayPhoto.created_at)}</span>
                 </div>
               </div>
 
               {/* Tags no modal */}
-              {photo.tags && photo.tags.length > 0 && (
+              {displayPhoto.tags && displayPhoto.tags.length > 0 && (
                 <div className="lightbox-tags">
-                  {photo.tags.map((tag, index) => (
+                  {displayPhoto.tags.map((tag, index) => (
                     <span key={index} className="tag-item">
+                      <Tag size={12} />
                       {tag}
                     </span>
                   ))}
@@ -116,17 +249,24 @@ function PhotoCard({ photo }) {
               )}
 
               {/* Pessoas no modal */}
-              {photo.persons && photo.persons.length > 0 && (
+              {displayPhoto.persons && displayPhoto.persons.length > 0 && (
                 <div className="lightbox-people">
                   <h4>Pessoas na foto</h4>
                   <div className="people-list">
-                    {photo.persons.map((person, index) => (
+                    {displayPhoto.persons.map((person, index) => (
                       <div key={index} className="person-item">
                         <Users size={16} />
                         {person}
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+              
+              {/* Photo Counter */}
+              {photos && photos.length > 1 && (
+                <div className="lightbox-counter">
+                  {currentPhotoIndex + 1} de {photos.length}
                 </div>
               )}
             </div>
