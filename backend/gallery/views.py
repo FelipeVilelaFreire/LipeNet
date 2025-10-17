@@ -1,13 +1,10 @@
-"""
-Views da aplicação Gallery
-==========================
+"""Views da aplicação Gallery - Endpoints da API REST"""
 
-Este módulo contém todas as views (endpoints) da API REST.
-As funções de IA foram movidas para funcoes_ia.py para melhor organização.
-"""
+import json
+from PIL import Image, ImageEnhance
 
 from django.http import Http404
-from django.db.models import Q
+from django.db.models import Q, Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,293 +12,353 @@ from rest_framework import status
 from .models import Photo, Person
 from .serializers import PhotoSerializer, PersonSerializer
 from .funcoes_ia import (
+    captioner,
+    object_detector,
+    enhance_description,
+    detect_faces_for_preview,
     process_photo_with_ai,
     delete_photo_file,
     clear_photo_references,
-    update_face_cache_after_delete
+    update_face_cache_after_delete,
+    translate_caption_to_portuguese
 )
 
 
-# ========================================================================================
-# VIEWS - FOTOS
-# ========================================================================================
+# ============================================================================
+# FOTOS - Upload e gerenciamento
+# ============================================================================
 
 class PhotoListAPIView(APIView):
-    """
-    View para listar todas as fotos e criar novas fotos.
-    
-    Endpoints:
-        GET /api/photos/  - Lista todas as fotos ordenadas por data
-        POST /api/photos/ - Faz upload de nova foto e processa com IA
-    """
-    
+    """GET: Lista fotos | POST: Upload com IA"""
+
     def get(self, request):
-        """Lista todas as fotos ordenadas por data de criação (mais recente primeiro)"""
         photos = Photo.objects.all().order_by('-created_at')
         serializer = PhotoSerializer(photos, many=True, context={'request': request})
         return Response(serializer.data)
 
     def post(self, request):
-        """
-        Faz upload de uma nova foto e processa com IA.
-        
-        Processo:
-        1. Recebe arquivo de imagem
-        2. Cria objeto Photo
-        3. Processa com IA (caption, tags, reconhecimento facial)
-        4. Retorna foto processada
-        """
+        """Upload de foto com processamento IA e seleção de pessoas"""
         image_file = request.FILES.get('image')
         if not image_file:
-            return Response(
-                {"error": "Nenhuma imagem foi enviada"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Nenhuma imagem foi enviada"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Cria objeto Photo com a imagem
+        user_description = request.data.get('text', '')
+        selected_person_ids = request.data.get('selected_persons', '[]')
+        custom_person_names = request.data.get('custom_person_names', '{}')  # Novos nomes editados
+        new_persons_data = request.data.get('new_persons', '[]')  # Novas pessoas para criar
+
+        try:
+            selected_person_ids = json.loads(selected_person_ids) if isinstance(selected_person_ids, str) else selected_person_ids
+        except:
+            selected_person_ids = []
+
+        try:
+            custom_person_names = json.loads(custom_person_names) if isinstance(custom_person_names, str) else custom_person_names
+        except:
+            custom_person_names = {}
+
+        try:
+            new_persons_data = json.loads(new_persons_data) if isinstance(new_persons_data, str) else new_persons_data
+        except:
+            new_persons_data = []
+
         photo = Photo(image=image_file)
-        
-        # Processa a foto com IA (gera caption, tags, detecta rostos)
+        if user_description:
+            photo.text = user_description
+
         photo = process_photo_with_ai(photo, image_file)
-        
-        # Serializa e retorna a foto processada
+
+        # Substitui pessoas detectadas automaticamente pelas selecionadas pelo usuário
+        if selected_person_ids is not None:
+            photo.persons.clear()
+            for person_id in selected_person_ids:
+                if person_id:
+                    try:
+                        person = Person.objects.get(id=person_id)
+
+                        # Se houver um nome customizado para esta pessoa, atualiza
+                        custom_name = custom_person_names.get(str(person_id))
+                        if custom_name and custom_name.strip():
+                            person.name = custom_name.strip()
+                            person.save()
+
+                        photo.persons.add(person)
+                    except Person.DoesNotExist:
+                        pass
+
+        # Cria novas pessoas (Pessoa Desconhecida renomeada)
+        if new_persons_data:
+            from .funcoes_ia import known_face_encodings, known_face_names
+
+            for new_person_data in new_persons_data:
+                person_name = new_person_data.get('name', '').strip()
+                person_encoding = new_person_data.get('encoding')
+
+                if person_name and person_encoding:
+                    # Verifica se já existe pessoa com esse nome
+                    existing_person = Person.objects.filter(name=person_name).first()
+
+                    if existing_person:
+                        # Se existe, apenas associa à foto
+                        photo.persons.add(existing_person)
+                    else:
+                        # Cria nova pessoa com o encoding fornecido
+                        new_person = Person.objects.create(
+                            name=person_name,
+                            encoding=person_encoding,
+                            photo_principal=photo
+                        )
+                        photo.persons.add(new_person)
+
+                        # Atualiza cache global
+                        known_face_encodings.append(person_encoding)
+                        known_face_names.append(person_name)
+
         serializer = PhotoSerializer(photo, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+class PhotoPreviewAPIView(APIView):
+    """POST: Gera preview de IA sem salvar (caption + pessoas detectadas)"""
+
+    def post(self, request):
+        image_file = request.FILES.get('image')
+        if not image_file:
+            return Response({"error": "Nenhuma imagem foi enviada"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            pil_image = Image.open(image_file).convert('RGB')
+
+            # Redimensiona se necessário (max 2048px)
+            if pil_image.width > 2048 or pil_image.height > 2048:
+                pil_image.thumbnail((2048, 2048), Image.Resampling.LANCZOS)
+
+            # Ajusta contraste para melhor detecção
+            enhancer = ImageEnhance.Contrast(pil_image)
+            pil_image_enhanced = enhancer.enhance(1.1)
+
+            # Gera caption
+            caption_results = captioner(pil_image_enhanced, max_new_tokens=50)
+            basic_caption = caption_results[0]['generated_text'] if caption_results else "Image processed"
+
+            # Detecta objetos
+            detected_objects = sorted(object_detector(pil_image_enhanced), key=lambda x: x['score'], reverse=True)
+
+            # Detecta rostos ANTES de enriquecer a descrição
+            detected_persons = detect_faces_for_preview(pil_image)
+
+            # Extrai nomes das pessoas detectadas para personalização
+            person_names = [person['name'] for person in detected_persons]
+
+            # Enriquece descrição COM nomes das pessoas
+            enhanced_caption = enhance_description(basic_caption, detected_objects, pil_image, person_names)
+
+            # Traduz para português
+            enhanced_caption_pt = translate_caption_to_portuguese(enhanced_caption)
+
+            return Response({
+                "caption": enhanced_caption,
+                "caption_pt": enhanced_caption_pt,
+                "detected_persons": detected_persons
+            })
+
+        except Exception as e:
+            return Response({"error": "Erro ao processar imagem", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class PhotoDetailAPIView(APIView):
-    """
-    View para operações em uma foto específica.
-    
-    Endpoints:
-        GET /api/photos/{id}/    - Retorna detalhes de uma foto
-        DELETE /api/photos/{id}/ - Remove uma foto e suas referências
-    """
-    
+    """GET: Detalhes da foto | DELETE: Remove foto"""
+
     def get_object(self, pk):
-        """Helper para obter foto ou retornar 404"""
         try:
             return Photo.objects.get(pk=pk)
         except Photo.DoesNotExist:
             raise Http404
 
     def get(self, request, pk):
-        """Retorna os detalhes de uma foto específica"""
         photo = self.get_object(pk)
         serializer = PhotoSerializer(photo, context={'request': request})
         return Response(serializer.data)
 
     def delete(self, request, pk):
-        """
-        Deleta uma foto, removendo:
-        - Referências como foto principal de pessoas
-        - Arquivo físico do disco
-        - Registro do banco de dados
-        """
         photo = self.get_object(pk)
-        
-        # Limpa referências da foto em pessoas
         clear_photo_references(photo)
-        
-        # Deleta arquivo físico
         delete_photo_file(photo)
-        
-        # Remove do banco de dados
         photo.delete()
-        
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# ========================================================================================
-# VIEWS - BUSCA
-# ========================================================================================
+# ============================================================================
+# BUSCA
+# ============================================================================
 
 class SearchView(APIView):
-    """
-    View para buscar fotos por texto.
-    
-    Endpoint:
-        GET /api/search/?q=texto - Busca fotos por caption, tags ou pessoas
-    """
-    
+    """GET: Busca fotos por texto (text, caption, tags, pessoas)"""
+
     def get(self, request):
-        """
-        Busca fotos que contenham o texto em:
-        - Caption (descrição gerada pela IA)
-        - Tags (categorias)
-        - Nomes de pessoas
-        """
         query = request.query_params.get('q', '')
-        
         if not query:
             return Response({"results": []})
 
-        # Busca em múltiplos campos usando Q objects
-        photos = Photo.objects.filter(
-            Q(caption__icontains=query) |      # Busca na descrição
-            Q(tags__name__icontains=query) |    # Busca nas tags
-            Q(persons__name__icontains=query)   # Busca nos nomes das pessoas
-        ).distinct()  # distinct() evita duplicatas
+        # Busca por palavras separadas
+        query_words = query.lower().split()
+        q_objects = Q()
 
+        for word in query_words:
+            q_objects |= (
+                Q(text__icontains=word) |
+                Q(caption__icontains=word) |
+                Q(tags__name__icontains=word) |
+                Q(persons__name__icontains=word)
+            )
+
+        photos = Photo.objects.filter(q_objects).distinct().order_by('-created_at')
         serializer = PhotoSerializer(photos, many=True, context={'request': request})
         return Response({"results": serializer.data})
 
 
-# ========================================================================================
-# VIEWS - PESSOAS
-# ========================================================================================
+# ============================================================================
+# PESSOAS - Gerenciamento
+# ============================================================================
 
 class PersonListAPIView(APIView):
-    """
-    View para listar todas as pessoas identificadas.
-    
-    Endpoint:
-        GET /api/persons/ - Lista todas as pessoas do sistema
-    """
-    
+    """GET: Lista pessoas (2+ fotos ou adicionadas manualmente)"""
+
     def get(self, request):
-        """Retorna lista de todas as pessoas identificadas pelo sistema"""
-        persons = Person.objects.all()
+        persons = Person.objects.annotate(num_photos=Count('photo')).filter(
+            Q(num_photos__gte=2) | Q(is_manually_added=True)
+        )
+        serializer = PersonSerializer(persons, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class HiddenPersonsAPIView(APIView):
+    """GET: Lista pessoas com apenas 1 foto (ocultas)"""
+
+    def get(self, request):
+        persons = Person.objects.annotate(num_photos=Count('photo')).filter(
+            num_photos=1,
+            is_manually_added=False
+        )
         serializer = PersonSerializer(persons, many=True, context={'request': request})
         return Response(serializer.data)
 
 
 class PersonDetailAPIView(APIView):
-    """
-    View para operações em uma pessoa específica.
-    
-    Endpoints:
-        GET /api/persons/{id}/    - Retorna detalhes de uma pessoa
-        PATCH /api/persons/{id}/  - Atualiza dados de uma pessoa (ex: nome)
-        DELETE /api/persons/{id}/ - Remove uma pessoa do sistema
-    """
-    
+    """GET: Detalhes da pessoa | PATCH: Atualiza nome | DELETE: Remove pessoa"""
+
     def get_object(self, pk):
-        """Helper para obter pessoa ou retornar 404"""
         try:
             return Person.objects.get(pk=pk)
         except Person.DoesNotExist:
             raise Http404
 
     def get(self, request, pk):
-        """Retorna detalhes de uma pessoa específica"""
         person = self.get_object(pk)
         serializer = PersonSerializer(person, context={'request': request})
         return Response(serializer.data)
 
     def patch(self, request, pk):
-        """
-        Atualização parcial de uma pessoa.
-        Geralmente usado para renomear a pessoa.
-        """
         person = self.get_object(pk)
-        serializer = PersonSerializer(person, data=request.data, partial=True)
+        serializer = PersonSerializer(person, data=request.data, partial=True, context={'request': request})
+
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            full_serializer = PersonSerializer(person, context={'request': request})
+            return Response(full_serializer.data)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        """
-        Remove uma pessoa do sistema:
-        1. Remove a pessoa de todas as fotos
-        2. Limpa referência de foto principal
-        3. Deleta do banco
-        4. Atualiza cache de reconhecimento facial
-        """
         person = self.get_object(pk)
         person_name = person.name
-        
-        # Remove pessoa de todas as fotos onde aparece
+
         person.photo_set.clear()
-        
-        # Remove referência de foto principal se existir
         if person.photo_principal:
             person.photo_principal = None
             person.save()
-        
-        # Deleta pessoa do banco
+
         person.delete()
-        
-        # Atualiza cache de rostos conhecidos
         update_face_cache_after_delete(person_name)
-        
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UpdatePersonPhotoAPIView(APIView):
-    """
-    View específica para atualizar foto de perfil de uma pessoa.
-    
-    Endpoint:
-        PATCH /api/persons/{id}/update-photo/ - Atualiza foto principal da pessoa
-    """
-    
-    def patch(self, request, pk):
-        """
-        Atualiza a foto principal (perfil) de uma pessoa.
-        Cria uma nova foto e a define como principal.
-        """
-        try:
-            person = Person.objects.get(pk=pk)
-        except Person.DoesNotExist:
-            return Response(
-                {"error": "Pessoa não encontrada"}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Verifica se foi enviada uma foto
-        if 'photo_principal' not in request.FILES:
-            return Response(
-                {"error": "Nenhuma foto foi enviada"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        image_file = request.FILES['photo_principal']
-        
-        try:
-            # Cria nova foto no sistema
-            new_photo = Photo.objects.create(
-                image=image_file,
-                caption=f"Foto de perfil de {person.name}"
-            )
-            
-            # Associa a pessoa à foto
-            new_photo.persons.add(person)
-            
-            # Define como foto principal
-            person.photo_principal = new_photo
-            person.save()
-            
-            # Retorna pessoa atualizada
-            serializer = PersonSerializer(person, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {"error": f"Erro ao processar imagem: {str(e)}"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
 class PersonPhotoListAPIView(APIView):
-    """
-    View para listar todas as fotos de uma pessoa específica.
-    
-    Endpoint:
-        GET /api/persons/{id}/photos/ - Lista todas as fotos onde a pessoa aparece
-    """
-    
+    """GET: Lista todas as fotos de uma pessoa"""
+
     def get(self, request, pk):
-        """Retorna todas as fotos onde uma pessoa específica foi identificada"""
         try:
             person = Person.objects.get(pk=pk)
-            # photo_set é a relação reversa do ManyToMany
             photos = person.photo_set.all().order_by('-created_at')
             serializer = PhotoSerializer(photos, many=True, context={'request': request})
             return Response(serializer.data)
         except Person.DoesNotExist:
-            return Response(
-                {"error": "Pessoa não encontrada"}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Pessoa não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class AddPersonManuallyAPIView(APIView):
+    """POST: Adiciona pessoa manualmente à lista visível"""
+
+    def post(self, request, pk):
+        try:
+            person = Person.objects.get(pk=pk)
+            person.is_manually_added = True
+            person.save()
+            serializer = PersonSerializer(person, context={'request': request})
+            return Response(serializer.data)
+        except Person.DoesNotExist:
+            return Response({"error": "Pessoa não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UpdatePersonPhotoAPIView(APIView):
+    """PATCH: Atualiza foto de perfil da pessoa"""
+
+    def patch(self, request, pk):
+        try:
+            person = Person.objects.get(pk=pk)
+        except Person.DoesNotExist:
+            return Response({"error": "Pessoa não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+        if 'photo_principal' not in request.FILES:
+            return Response({"error": "Nenhuma foto foi enviada"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            image_file = request.FILES['photo_principal']
+            new_photo = Photo.objects.create(image=image_file, caption=f"Foto de perfil de {person.name}")
+            new_photo.persons.add(person)
+
+            person.photo_principal = new_photo
+            person.save()
+
+            serializer = PersonSerializer(person, context={'request': request})
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"error": f"Erro ao processar imagem: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ============================================================================
+# FAVORITOS
+# ============================================================================
+
+class ToggleFavoriteAPIView(APIView):
+    """POST: Alterna status de favorito da foto"""
+
+    def post(self, request, pk):
+        try:
+            photo = Photo.objects.get(pk=pk)
+            photo.is_favorite = not photo.is_favorite
+            photo.save()
+            serializer = PhotoSerializer(photo, context={'request': request})
+            return Response(serializer.data)
+        except Photo.DoesNotExist:
+            return Response({"error": "Foto não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class FavoritePhotosAPIView(APIView):
+    """GET: Lista todas as fotos favoritas"""
+
+    def get(self, request):
+        photos = Photo.objects.filter(is_favorite=True).order_by('-created_at')
+        serializer = PhotoSerializer(photos, many=True, context={'request': request})
+        return Response(serializer.data)

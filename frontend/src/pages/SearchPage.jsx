@@ -29,13 +29,18 @@ const SearchPage = () => {
       setHasSearched(true);
 
       try {
-        const response = await fetch(`http://localhost:8000/api/search/?query=${encodeURIComponent(term)}`);
+        const response = await fetch(`http://127.0.0.1:8000/api/search/?q=${encodeURIComponent(term)}`);
         if (response.ok) {
           const data = await response.json();
-          setSearchResults(data);
+          // O backend retorna {results: [...]}, então precisamos acessar data.results
+          setSearchResults(data.results || []);
+        } else {
+          console.error('Erro na resposta:', response.status);
+          setSearchResults([]);
         }
       } catch (error) {
         console.error('Erro na pesquisa:', error);
+        setSearchResults([]);
       } finally {
         setIsSearching(false);
       }
@@ -117,8 +122,13 @@ const SearchPage = () => {
                 {searchResults.length} {searchResults.length === 1 ? 'resultado' : 'resultados'} encontrados
               </h2>
               <div className="results-grid">
-                {searchResults.map(photo => (
-                  <PhotoCard key={photo.id} photo={photo} />
+                {searchResults.map((photo, index) => (
+                  <PhotoCard 
+                    key={photo.id} 
+                    photo={photo}
+                    photos={searchResults}
+                    currentIndex={index}
+                  />
                 ))}
               </div>
             </>

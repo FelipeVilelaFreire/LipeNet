@@ -179,6 +179,30 @@
   gap: 8px;
 }
 
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #999;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+.favorite-btn.active {
+  color: #FFD700;
+}
+
+.favorite-btn:hover {
+  color: #FFD700;
+}
+
 /* Modal Lightbox */
 .lightbox-modal {
   position: fixed;

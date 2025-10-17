@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Calendar, Users, Tag, ChevronLeft, ChevronRight, Download, Share2, Heart, Trash2 } from 'lucide-react';
+import { Calendar, Users, Tag, ChevronLeft, ChevronRight, Download, Share2, Heart, Trash2, Star } from 'lucide-react';
+import axios from 'axios';
 import "./PhotoCard.css";
 
-function PhotoCard({ photo, photos = [], currentIndex = 0, onDelete }) {
+function PhotoCard({ photo, photos = [], currentIndex = 0, onDelete, onFavoriteToggle }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(currentIndex);
   const [liked, setLiked] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(photo.is_favorite || false);
 
   // A URL da imagem já vem completa do backend agora
   const imageUrl = photo.image && photo.image.startsWith('http') 
@@ -50,9 +52,24 @@ function PhotoCard({ photo, photos = [], currentIndex = 0, onDelete }) {
     if (navigator.share) {
       navigator.share({
         title: photo.text || 'Foto',
-        text: photo.caption || '',
+        text: photo.caption_pt || photo.caption || '',
         url: window.location.href
       });
+    }
+  };
+
+  const handleToggleFavorite = async (e) => {
+    e.stopPropagation();
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/photos/${photo.id}/toggle-favorite/`
+      );
+      setIsFavorite(response.data.is_favorite);
+      if (onFavoriteToggle) {
+        onFavoriteToggle(photo.id, response.data.is_favorite);
+      }
+    } catch (error) {
+      console.error('Erro ao favoritar foto:', error);
     }
   };
 
@@ -119,7 +136,7 @@ function PhotoCard({ photo, photos = [], currentIndex = 0, onDelete }) {
           </h4>
           
           <p className="card-text">
-            {photo.caption || "Processando legenda..."}
+            {photo.caption_pt || photo.caption || "Processando legenda..."}
           </p>
 
           {/* Tags se houver */}
@@ -137,16 +154,25 @@ function PhotoCard({ photo, photos = [], currentIndex = 0, onDelete }) {
           )}
 
           {/* Footer com pessoas */}
-          {photo.persons && photo.persons.length > 0 && (
-            <div className="card-footer">
+          <div className="card-footer">
+            {photo.persons && photo.persons.length > 0 && (
               <div className="card-people">
                 <Users size={16} />
                 {photo.persons.length === 1 
                   ? photo.persons[0]
                   : `${photo.persons.length} pessoas`}
               </div>
+            )}
+            <div className="card-actions">
+              <button 
+                className={`action-btn favorite-btn ${isFavorite ? 'active' : ''}`}
+                onClick={handleToggleFavorite}
+                title={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+              >
+                <Star size={18} fill={isFavorite ? '#FFD700' : 'none'} />
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -226,7 +252,7 @@ function PhotoCard({ photo, photos = [], currentIndex = 0, onDelete }) {
               <h3>{displayPhoto.text || "Sem descrição"}</h3>
               
               <p className="lightbox-caption">
-                {displayPhoto.caption || "Processando legenda..."}
+                {displayPhoto.caption_pt || displayPhoto.caption || "Processando legenda..."}
               </p>
               
               <div className="lightbox-meta">

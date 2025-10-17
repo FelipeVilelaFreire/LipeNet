@@ -15,7 +15,7 @@ const GalleryPage = () => {
 
   const fetchPhotos = async () => {
     try {
-const response = await fetch('http://localhost:8000/api/photos/');
+      const response = await fetch('http://127.0.0.1:8000/api/photos/');
       if (response.ok) {
         const data = await response.json();
         setPhotos(data);
@@ -36,13 +36,20 @@ const response = await fetch('http://localhost:8000/api/photos/');
     
     switch (sortBy) {
       case 'recent':
-        sorted.sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
+        sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case 'oldest':
-        sorted.sort((a, b) => new Date(a.uploaded_at) - new Date(b.uploaded_at));
+        sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         break;
       case 'name':
-        sorted.sort((a, b) => (a.description || '').localeCompare(b.description || ''));
+        sorted.sort((a, b) => (a.caption || a.text || '').localeCompare(b.caption || b.text || ''));
+        break;
+      case 'favorites':
+        sorted.sort((a, b) => {
+          if (a.is_favorite && !b.is_favorite) return -1;
+          if (!a.is_favorite && b.is_favorite) return 1;
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
         break;
       default:
         break;
@@ -59,14 +66,21 @@ const response = await fetch('http://localhost:8000/api/photos/');
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
     
     switch (filter) {
       case 'week':
-        return sorted.filter(photo => new Date(photo.uploaded_at) >= oneWeekAgo);
+        return sorted.filter(photo => new Date(photo.created_at) >= oneWeekAgo);
       case 'month':
-        return sorted.filter(photo => new Date(photo.uploaded_at) >= oneMonthAgo);
+        return sorted.filter(photo => new Date(photo.created_at) >= oneMonthAgo);
+      case 'three_months':
+        return sorted.filter(photo => new Date(photo.created_at) >= threeMonthsAgo);
       case 'people':
-        return sorted.filter(photo => photo.detected_faces && photo.detected_faces.length > 0);
+        return sorted.filter(photo => photo.persons && photo.persons.length > 0);
+      case 'no_people':
+        return sorted.filter(photo => !photo.persons || photo.persons.length === 0);
+      case 'favorites':
+        return sorted.filter(photo => photo.is_favorite === true);
       default:
         return sorted;
     }
@@ -135,7 +149,8 @@ const response = await fetch('http://localhost:8000/api/photos/');
           >
             <option value="recent">Mais recentes</option>
             <option value="oldest">Mais antigas</option>
-            <option value="name">Nome</option>
+            <option value="name">Nome/Descrição</option>
+            <option value="favorites">Favoritas primeiro</option>
           </select>
         </div>
       </div>

@@ -6,6 +6,7 @@ colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1733218098
 Django==5.2.4
 django-cors-headers==4.7.0
 djangorestframework==3.16.0
+deep-translator==1.11.4
 dlib @ file:///C:/bld/dlib-split_1753311235922/work
 face-recognition @ file:///home/conda/feedstock_root/build_artifacts/face_recognition_1619808233029/work
 face-recognition-models @ file:///home/conda/feedstock_root/build_artifacts/face_recognition_models_1595707436534/work

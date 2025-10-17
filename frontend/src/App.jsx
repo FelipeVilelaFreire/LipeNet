@@ -6,6 +6,7 @@ import SearchPage from './pages/SearchPage';
 import UploadPage from './pages/UploadPage';
 import ManagePeoplePage from './pages/ManagePeoplePage';
 import PersonDetailPage from './pages/PersonDetailPage';
+import FavoritosPage from './pages/FavoritosPage';
 import Entry from './vitrine/Entry';
 import './App.css';
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/people" element={<ManagePeoplePage />} />
           <Route path="/people/:personId" element={<PersonDetailPage />} />
+          <Route path="/favoritos" element={<FavoritosPage />} />
         </Routes>
       </main>
     </div>

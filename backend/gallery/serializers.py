@@ -9,7 +9,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Photo
-        fields = ['id', 'text', 'image', 'caption', 'created_at', 'tags', 'persons']
+        fields = ['id', 'text', 'image', 'caption', 'caption_pt', 'created_at', 'tags', 'persons', 'is_favorite']
     
     def get_image(self, obj):
         request = self.context.get('request')

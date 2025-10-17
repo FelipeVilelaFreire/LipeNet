@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { UserCircle, Camera, Edit2, Save, X, Users, Upload, Check, Trash2 } from 'lucide-react';
+import { UserCircle, Camera, Edit2, Save, X, Users, Upload, Check, Trash2, UserPlus } from 'lucide-react';
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./ManagePeoplePage.css";
@@ -10,6 +10,10 @@ function ManagePeoplePage() {
   const [editingPersonId, setEditingPersonId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState(null);
+  const [showAddPersonModal, setShowAddPersonModal] = useState(false);
+  const [hiddenPeople, setHiddenPeople] = useState([]);
+  const [addingPersonId, setAddingPersonId] = useState(null);
+  const [deletingPersonId, setDeletingPersonId] = useState(null);
   const fileInputRefs = useRef({});
   const navigate = useNavigate();
 
@@ -45,11 +49,13 @@ function ManagePeoplePage() {
         }
       );
 
-      setPeople(people.map((p) => (p.id === id ? response.data : p)));
+      // Atualiza a lista de pessoas com os dados completos retornados do backend
+      setPeople(people.map((p) => (p.id === id ? { ...p, ...response.data } : p)));
       setEditingPersonId(null);
       setEditingName({ ...editingName, [id]: "" });
     } catch (err) {
       console.error("Erro ao atualizar nome:", err);
+      alert("Erro ao atualizar o nome da pessoa");
     }
   };
 
@@ -125,6 +131,55 @@ function ManagePeoplePage() {
     }
   };
 
+  const fetchHiddenPeople = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/persons/hidden/");
+      setHiddenPeople(response.data);
+    } catch (err) {
+      console.error("Erro ao buscar pessoas ocultas:", err);
+    }
+  };
+
+  const handleOpenAddPersonModal = () => {
+    setShowAddPersonModal(true);
+    fetchHiddenPeople();
+  };
+
+  const handleAddPersonManually = async (personId) => {
+    setAddingPersonId(personId);
+    try {
+      await axios.post(`http://127.0.0.1:8000/api/persons/${personId}/add-manually/`);
+      
+      // Recarrega as listas
+      await fetchPeople();
+      await fetchHiddenPeople();
+      
+      // Remove a pessoa da lista de ocultas
+      setHiddenPeople(hiddenPeople.filter(p => p.id !== personId));
+    } catch (err) {
+      console.error("Erro ao adicionar pessoa:", err);
+      alert("Erro ao adicionar pessoa");
+    } finally {
+      setAddingPersonId(null);
+    }
+  };
+
+  const handleDeletePersonFromModal = async (personId, personName) => {
+    if (window.confirm(`Tem certeza que deseja deletar ${personName} permanentemente?`)) {
+      setDeletingPersonId(personId);
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/persons/${personId}/`);
+        // Remove a pessoa da lista de ocultas
+        setHiddenPeople(hiddenPeople.filter(p => p.id !== personId));
+      } catch (err) {
+        console.error("Erro ao deletar pessoa:", err);
+        alert("Erro ao deletar pessoa");
+      } finally {
+        setDeletingPersonId(null);
+      }
+    }
+  };
+
   if (isLoading) {
     return <PeoplePageSkeleton />;
   }
@@ -134,7 +189,7 @@ function ManagePeoplePage() {
       <div className="people-empty-state">
         <Users size={80} />
         <h2>Nenhuma pessoa identificada ainda</h2>
-        <p>Faça upload de fotos para começar a identificar pessoas automaticamente</p>
+        <p>As pessoas aparecem aqui quando são identificadas em 2 ou mais fotos</p>
         <Link to="/upload" className="empty-state-btn">
           <Camera size={20} />
           Adicionar Fotos
@@ -156,6 +211,13 @@ function ManagePeoplePage() {
               </p>
             </div>
           </div>
+          <button 
+            className="add-person-btn"
+            onClick={handleOpenAddPersonModal}
+          >
+            <UserPlus size={20} />
+            Adicionar Pessoas
+          </button>
         </div>
       </header>
 
@@ -299,6 +361,97 @@ function ManagePeoplePage() {
           );
         })}
       </div>
+
+      {/* Modal para adicionar pessoas */}
+      {showAddPersonModal && (
+        <div className="modal-overlay" onClick={() => setShowAddPersonModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Adicionar Pessoas</h2>
+              <button 
+                className="modal-close"
+                onClick={() => setShowAddPersonModal(false)}
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              {hiddenPeople.length === 0 ? (
+                <div className="modal-empty">
+                  <Users size={48} />
+                  <p>Não há pessoas ocultas para adicionar</p>
+                  <span className="modal-hint">
+                    Pessoas com 1 foto aparecem aqui para adição manual
+                  </span>
+                </div>
+              ) : (
+                <div className="hidden-people-list">
+                  {hiddenPeople.map((person) => (
+                    <div key={person.id} className="hidden-person-card">
+                      <div className="person-info">
+                        {person.representative_photo || person.first_photo ? (
+                          <img
+                            src={person.representative_photo || person.first_photo}
+                            alt={person.name}
+                            className="person-thumbnail"
+                          />
+                        ) : (
+                          <div className="person-avatar-small">
+                            <UserCircle size={40} />
+                          </div>
+                        )}
+                        <div className="person-details">
+                          <h3>{person.name}</h3>
+                          <span className="person-photo-count">
+                            {person.photo_count || 0} {person.photo_count === 1 ? 'foto' : 'fotos'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="modal-person-actions">
+                        <button 
+                          className="add-person-action-btn"
+                          onClick={() => handleAddPersonManually(person.id)}
+                          disabled={addingPersonId === person.id || deletingPersonId === person.id}
+                        >
+                          {addingPersonId === person.id ? (
+                            <>
+                              <div className="spinner-small"></div>
+                              Adicionando...
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus size={18} />
+                              Cadastrar Pessoa
+                            </>
+                          )}
+                        </button>
+                        <button 
+                          className="delete-person-modal-btn"
+                          onClick={() => handleDeletePersonFromModal(person.id, person.name)}
+                          disabled={deletingPersonId === person.id || addingPersonId === person.id}
+                        >
+                          {deletingPersonId === person.id ? (
+                            <>
+                              <div className="spinner-small"></div>
+                              Deletando...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 size={18} />
+                              Deletar
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

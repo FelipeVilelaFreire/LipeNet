@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Camera, Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Search, Upload } from 'lucide-react';
+import { Camera, Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Search, Upload, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import PhotoCard from '../components/PhotoCard';
 import './HomePage.css';
 
@@ -38,7 +39,7 @@ function HomePage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/photos/?page=${pageNum}&limit=10`);
+      const response = await fetch(`http://127.0.0.1:8000/api/photos/?page=${pageNum}&limit=10`);
       if (response.ok) {
         const data = await response.json();
         
@@ -69,12 +70,24 @@ function HomePage() {
     const [liked, setLiked] = useState(false);
     const [saved, setSaved] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(post.is_favorite || false);
 
     const imageUrl = post.image && post.image.startsWith('http') 
       ? post.image 
       : post.image 
-        ? `http://localhost:8000${post.image}`
+        ? `http://127.0.0.1:8000${post.image}`
         : '/placeholder.jpg';
+
+    const handleToggleFavorite = async () => {
+      try {
+        const response = await axios.post(
+          `http://127.0.0.1:8000/api/photos/${post.id}/toggle-favorite/`
+        );
+        setIsFavorite(response.data.is_favorite);
+      } catch (error) {
+        console.error('Erro ao favoritar foto:', error);
+      }
+    };
 
     const formatDate = (dateString) => {
       const date = new Date(dateString);
@@ -129,6 +142,13 @@ function HomePage() {
               </button>
               <button className="action-btn" onClick={() => setShowModal(true)}>
                 <MessageCircle size={24} />
+              </button>
+              <button 
+                className={`action-btn favorite-feed ${isFavorite ? 'active' : ''}`}
+                onClick={handleToggleFavorite}
+                title={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+              >
+                <Star size={24} fill={isFavorite ? '#FFD700' : 'none'} />
               </button>
               <button className="action-btn">
                 <Share2 size={24} />
@@ -254,30 +274,6 @@ function HomePage() {
 
   return (
     <div className="home-feed">
-      <header className="feed-header">
-        <div className="header-container">
-          <div className="header-logo">
-            <Camera size={32} />
-            <h1>LipeNet</h1>
-          </div>
-          <div className="header-actions">
-            <button 
-              className="header-btn"
-              onClick={() => navigate('/search')}
-              title="Pesquisar"
-            >
-              <Search size={24} />
-            </button>
-            <button 
-              className="header-btn primary"
-              onClick={() => navigate('/upload')}
-              title="Adicionar foto"
-            >
-              <Upload size={24} />
-            </button>
-          </div>
-        </div>
-      </header>
 
       <main className="feed-container">
         {loading ? (

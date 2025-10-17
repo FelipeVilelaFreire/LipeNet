@@ -1,4 +1,4 @@
-import { useEffect, useRef, useLayoutEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -27,447 +27,465 @@ import {
 } from 'lucide-react';
 import './Entry.css';
 
-gsap.registerPlugin(ScrollTrigger);
+// Register GSAP plugins
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 function Entry() {
   const navigate = useNavigate();
   const mainRef = useRef(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    // Wait for DOM to be ready
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    // Create GSAP context
     const ctx = gsap.context(() => {
-      // Reset inicial
-      gsap.set('.hero-badge, .hero-title, .hero-subtitle, .hero-cta > *, .hero-stat', {
-        opacity: 0,
-        y: 30
-      });
+      try {
+        // Configure ScrollTrigger
+        ScrollTrigger.defaults({
+          markers: false,
+          toggleActions: "play none none none"
+        });
 
-      // Hero Timeline
-      const heroTl = gsap.timeline({
-        defaults: { ease: 'power3.out' }
-      });
+        // Kill any existing ScrollTriggers to prevent conflicts
+        ScrollTrigger.getAll().forEach(st => st.kill());
 
-      heroTl
-        .to('.hero-badge', {
-          opacity: 1,
-          y: 0,
-          duration: 0.8
-        })
-        .to('.hero-title', {
-          opacity: 1,
-          y: 0,
-          duration: 1
-        }, '-=0.4')
-        .to('.hero-subtitle', {
-          opacity: 1,
-          y: 0,
-          duration: 0.8
-        }, '-=0.6')
-        .to('.hero-cta > *', {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          stagger: 0.1
-        }, '-=0.4')
-        .to('.hero-stat', {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.6,
-          stagger: 0.1,
-          ease: 'back.out(1.7)'
-        }, '-=0.3');
-
-      // Device mockup animation
-      gsap.fromTo('.device-mockup',
-        {
-          opacity: 0,
-          scale: 0.8,
-          rotateY: -30
-        },
-        {
-          opacity: 1,
-          scale: 1,
-          rotateY: 0,
-          duration: 1.2,
-          delay: 0.5,
-          ease: 'power3.out'
-        }
-      );
-
-      // Floating elements continuous animation
-      gsap.to('.floating-element', {
-        y: 'random(-20, -40)',
-        x: 'random(-10, 10)',
-        rotation: 'random(-5, 5)',
-        duration: 'random(3, 5)',
-        repeat: -1,
-        yoyo: true,
-        ease: 'power1.inOut',
-        stagger: {
-          each: 0.2,
-          from: 'random'
-        }
-      });
-
-      // Parallax orbs
-      gsap.to('.orb-1', {
-        scrollTrigger: {
-          trigger: '.hero-section',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1
-        },
-        y: -200,
-        x: -100
-      });
-
-      gsap.to('.orb-2', {
-        scrollTrigger: {
-          trigger: '.hero-section',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1.5
-        },
-        y: 150,
-        x: 100
-      });
-
-      // Stats Section - Counter animation
-      ScrollTrigger.create({
-        trigger: '.stats-section',
-        start: 'top 80%',
-        onEnter: () => {
-          gsap.from('.stat-card', {
-            opacity: 0,
-            y: 50,
+        // Hero Section Animations
+        const heroTimeline = gsap.timeline({
+          defaults: {
             duration: 0.8,
-            stagger: 0.1,
-            ease: 'power3.out'
-          });
-
-          // Animate numbers
-          document.querySelectorAll('.stat-number').forEach((el) => {
-            const endValue = parseInt(el.textContent);
-            const suffix = el.dataset.suffix || '';
-            
-            gsap.fromTo(el, 
-              { textContent: 0 },
-              {
-                textContent: endValue,
-                duration: 2,
-                ease: 'power2.inOut',
-                snap: { textContent: 1 },
-                onUpdate: function() {
-                  el.textContent = Math.round(this.targets()[0].textContent) + suffix;
-                }
-              }
-            );
-          });
-        },
-        once: true
-      });
-
-      // Features Section - Advanced stagger animation
-      gsap.set('.feature-card', {
-        opacity: 0,
-        y: 60,
-        scale: 0.9
-      });
-
-      ScrollTrigger.batch('.feature-card', {
-        start: 'top 85%',
-        onEnter: (elements) => {
-          gsap.to(elements, {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.8,
-            stagger: {
-              each: 0.15,
-              grid: [2, 3],
-              from: 'start'
-            },
-            ease: 'power3.out',
-            overwrite: 'auto'
-          });
-        },
-        once: true
-      });
-
-      // Section headers animation
-      gsap.utils.toArray('.section-header').forEach(header => {
-        const badge = header.querySelector('.section-badge');
-        const title = header.querySelector('.section-title');
-        const subtitle = header.querySelector('.section-subtitle');
-
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: header,
-            start: 'top 80%',
-            toggleActions: 'play none none reverse'
+            ease: "power2.out"
           }
         });
 
-        if (badge) {
-          tl.from(badge, {
-            opacity: 0,
-            scale: 0.5,
-            duration: 0.6,
-            ease: 'back.out(1.7)'
+        // Hero content animation
+        heroTimeline
+          .fromTo('.hero-badge', 
+            { opacity: 0, y: 20 },
+            { opacity: 1, y: 0, duration: 0.6 }
+          )
+          .fromTo('.hero-title',
+            { opacity: 0, y: 30 },
+            { opacity: 1, y: 0, duration: 0.8 },
+            "-=0.4"
+          )
+          .fromTo('.hero-subtitle',
+            { opacity: 0, y: 20 },
+            { opacity: 1, y: 0, duration: 0.6 },
+            "-=0.5"
+          )
+          .fromTo('.hero-cta > *',
+            { opacity: 0, y: 20 },
+            { 
+              opacity: 1, 
+              y: 0, 
+              duration: 0.5,
+              stagger: 0.1 
+            },
+            "-=0.3"
+          )
+          .fromTo('.hero-stat',
+            { opacity: 0, scale: 0.9 },
+            { 
+              opacity: 1, 
+              scale: 1, 
+              duration: 0.4,
+              stagger: 0.1 
+            },
+            "-=0.2"
+          );
+
+        // Device mockup animation
+        gsap.fromTo('.device-mockup',
+          { 
+            opacity: 0, 
+            scale: 0.95,
+            y: 20 
+          },
+          { 
+            opacity: 1, 
+            scale: 1,
+            y: 0,
+            duration: 1,
+            delay: 0.5,
+            ease: "power2.out"
+          }
+        );
+
+        // Photo grid items
+        gsap.fromTo('.photo-item',
+          { 
+            opacity: 0, 
+            scale: 0.8 
+          },
+          { 
+            opacity: 1, 
+            scale: 1,
+            duration: 0.5,
+            stagger: 0.1,
+            delay: 1,
+            ease: "back.out(1.5)"
+          }
+        );
+
+        // Floating elements animation
+        const floatingElements = document.querySelectorAll('.floating-element');
+        floatingElements.forEach((el, index) => {
+          gsap.to(el, {
+            y: "random(-15, -25)",
+            x: "random(-10, 10)",
+            duration: "random(3, 4)",
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            delay: index * 0.3
           });
-        }
+        });
 
-        if (title) {
-          tl.from(title, {
-            opacity: 0,
-            y: 30,
-            duration: 0.8,
-            ease: 'power3.out'
-          }, '-=0.3');
-        }
+        // Background orbs parallax
+        ScrollTrigger.create({
+          trigger: '.hero-section',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+          onUpdate: (self) => {
+            const progress = self.progress;
+            const orb1 = document.querySelector('.orb-1');
+            const orb2 = document.querySelector('.orb-2');
+            
+            if (orb1) {
+              gsap.set(orb1, {
+                y: -100 * progress,
+                x: -50 * progress
+              });
+            }
+            
+            if (orb2) {
+              gsap.set(orb2, {
+                y: 100 * progress,
+                x: 50 * progress
+              });
+            }
+          }
+        });
 
-        if (subtitle) {
-          tl.from(subtitle, {
-            opacity: 0,
-            y: 20,
-            duration: 0.6,
-            ease: 'power3.out'
-          }, '-=0.4');
-        }
-      });
-
-      // Timeline Section - Zigzag animation
-      gsap.set('.timeline-item', {
-        opacity: 0
-      });
-
-      gsap.set('.timeline-item:nth-child(odd) .timeline-content', {
-        x: -100
-      });
-
-      gsap.set('.timeline-item:nth-child(even) .timeline-content', {
-        x: 100
-      });
-
-      gsap.set('.timeline-icon', {
-        scale: 0,
-        rotation: -180
-      });
-
-      ScrollTrigger.batch('.timeline-item', {
-        start: 'top 80%',
-        onEnter: (elements) => {
-          elements.forEach((el, i) => {
-            const content = el.querySelector('.timeline-content');
-            const icon = el.querySelector('.timeline-icon');
-            const number = el.querySelector('.timeline-number');
-
-            gsap.timeline()
-              .to(el, {
-                opacity: 1,
-                duration: 0.3
-              })
-              .to(content, {
-                x: 0,
-                duration: 0.8,
-                ease: 'power3.out'
-              }, '-=0.2')
-              .to(icon, {
-                scale: 1,
-                rotation: 0,
+        // Stats counter animation
+        ScrollTrigger.create({
+          trigger: '.stats-section',
+          start: 'top 80%',
+          once: true,
+          onEnter: () => {
+            // Animate stat cards
+            gsap.fromTo('.stat-card',
+              { opacity: 0, y: 30 },
+              { 
+                opacity: 1, 
+                y: 0,
                 duration: 0.6,
-                ease: 'back.out(1.7)'
-              }, '-=0.4')
-              .from(number, {
-                scale: 0,
-                duration: 0.4,
-                ease: 'back.out(2)'
-              }, '-=0.5');
-          });
-        },
-        once: true
-      });
+                stagger: 0.1,
+                ease: "power2.out"
+              }
+            );
 
-      // Timeline line drawing animation
-      gsap.fromTo('.timeline-line',
-        {
-          scaleY: 0,
-          transformOrigin: 'top'
-        },
-        {
-          scaleY: 1,
-          scrollTrigger: {
+            // Animate numbers
+            const statNumbers = document.querySelectorAll('.stat-number');
+            statNumbers.forEach((el) => {
+              const endValue = parseInt(el.getAttribute('data-value') || el.textContent);
+              const suffix = el.getAttribute('data-suffix') || '';
+              
+              const obj = { value: 0 };
+              gsap.to(obj, {
+                value: endValue,
+                duration: 2,
+                ease: "power1.out",
+                onUpdate: () => {
+                  el.textContent = Math.round(obj.value) + suffix;
+                }
+              });
+            });
+          }
+        });
+
+        // Features cards animation
+        ScrollTrigger.create({
+          trigger: '.features-section',
+          start: 'top 70%',
+          once: true,
+          onEnter: () => {
+            gsap.fromTo('.feature-card',
+              { 
+                opacity: 0, 
+                y: 40,
+                scale: 0.95
+              },
+              { 
+                opacity: 1, 
+                y: 0,
+                scale: 1,
+                duration: 0.6,
+                stagger: {
+                  amount: 0.8,
+                  from: "start"
+                },
+                ease: "power2.out"
+              }
+            );
+          }
+        });
+
+        // Section headers animation
+        const sectionHeaders = document.querySelectorAll('.section-header');
+        sectionHeaders.forEach((header) => {
+          ScrollTrigger.create({
+            trigger: header,
+            start: 'top 80%',
+            once: true,
+            onEnter: () => {
+              const badge = header.querySelector('.section-badge');
+              const title = header.querySelector('.section-title');
+              const subtitle = header.querySelector('.section-subtitle');
+              
+              const tl = gsap.timeline();
+              
+              if (badge) {
+                tl.fromTo(badge,
+                  { opacity: 0, scale: 0.8 },
+                  { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.5)" }
+                );
+              }
+              
+              if (title) {
+                tl.fromTo(title,
+                  { opacity: 0, y: 20 },
+                  { opacity: 1, y: 0, duration: 0.6 },
+                  "-=0.3"
+                );
+              }
+              
+              if (subtitle) {
+                tl.fromTo(subtitle,
+                  { opacity: 0, y: 15 },
+                  { opacity: 1, y: 0, duration: 0.5 },
+                  "-=0.4"
+                );
+              }
+            }
+          });
+        });
+
+        // Timeline animation
+        const timelineItems = document.querySelectorAll('.timeline-item');
+        timelineItems.forEach((item, index) => {
+          ScrollTrigger.create({
+            trigger: item,
+            start: 'top 80%',
+            once: true,
+            onEnter: () => {
+              const content = item.querySelector('.timeline-content');
+              const icon = item.querySelector('.timeline-icon');
+              const number = item.querySelector('.timeline-number');
+              
+              const tl = gsap.timeline();
+              
+              // Fade in the item
+              tl.fromTo(item,
+                { opacity: 0 },
+                { opacity: 1, duration: 0.3 }
+              );
+              
+              // Slide in content
+              if (content) {
+                const direction = index % 2 === 0 ? -50 : 50;
+                tl.fromTo(content,
+                  { x: direction, opacity: 0 },
+                  { x: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
+                  "-=0.2"
+                );
+              }
+              
+              // Scale in icon
+              if (icon) {
+                tl.fromTo(icon,
+                  { scale: 0, rotation: -180 },
+                  { scale: 1, rotation: 0, duration: 0.5, ease: "back.out(1.5)" },
+                  "-=0.4"
+                );
+              }
+              
+              // Pop in number
+              if (number) {
+                tl.fromTo(number,
+                  { scale: 0 },
+                  { scale: 1, duration: 0.4, ease: "back.out(2)" },
+                  "-=0.3"
+                );
+              }
+            }
+          });
+        });
+
+        // Timeline line animation
+        const timelineLine = document.querySelector('.timeline-line');
+        if (timelineLine) {
+          ScrollTrigger.create({
             trigger: '.timeline-section',
             start: 'top 60%',
             end: 'bottom 80%',
-            scrub: 1
+            scrub: 1,
+            onUpdate: (self) => {
+              gsap.set(timelineLine, {
+                scaleY: self.progress,
+                transformOrigin: 'top center'
+              });
+            }
+          });
+        }
+
+        // Testimonials animation
+        ScrollTrigger.create({
+          trigger: '.testimonials-section',
+          start: 'top 70%',
+          once: true,
+          onEnter: () => {
+            gsap.fromTo('.testimonial-card',
+              { 
+                opacity: 0, 
+                y: 30,
+                scale: 0.95
+              },
+              { 
+                opacity: 1, 
+                y: 0,
+                scale: 1,
+                duration: 0.6,
+                stagger: 0.15,
+                ease: "power2.out"
+              }
+            );
           }
+        });
+
+        // CTA section animation
+        ScrollTrigger.create({
+          trigger: '.cta-section',
+          start: 'top 70%',
+          once: true,
+          onEnter: () => {
+            const tl = gsap.timeline();
+            
+            tl.fromTo('.cta-card',
+              { opacity: 0, scale: 0.95 },
+              { opacity: 1, scale: 1, duration: 0.8, ease: "power2.out" }
+            )
+            .fromTo('.cta-badge',
+              { opacity: 0, scale: 0.8 },
+              { opacity: 1, scale: 1, duration: 0.5 },
+              "-=0.5"
+            )
+            .fromTo('.cta-title',
+              { opacity: 0, y: 20 },
+              { opacity: 1, y: 0, duration: 0.6 },
+              "-=0.3"
+            )
+            .fromTo('.cta-subtitle',
+              { opacity: 0, y: 15 },
+              { opacity: 1, y: 0, duration: 0.5 },
+              "-=0.4"
+            )
+            .fromTo('.cta-feature',
+              { opacity: 0, scale: 0.9 },
+              { opacity: 1, scale: 1, duration: 0.4, stagger: 0.1 },
+              "-=0.2"
+            )
+            .fromTo('.cta-buttons > *',
+              { opacity: 0, y: 20 },
+              { opacity: 1, y: 0, duration: 0.5, stagger: 0.1 },
+              "-=0.2"
+            );
+            
+            // Glow animation
+            const ctaGlow = document.querySelector('.cta-glow');
+            if (ctaGlow) {
+              gsap.to(ctaGlow, {
+                scale: 1.2,
+                opacity: 0.6,
+                duration: 3,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+              });
+            }
+          }
+        });
+
+        // Footer animation
+        ScrollTrigger.create({
+          trigger: '.entry-footer',
+          start: 'top 90%',
+          once: true,
+          onEnter: () => {
+            const tl = gsap.timeline();
+            
+            tl.fromTo('.footer-brand',
+              { opacity: 0, y: 20 },
+              { opacity: 1, y: 0, duration: 0.6 }
+            )
+            .fromTo('.footer-column',
+              { opacity: 0, y: 20 },
+              { opacity: 1, y: 0, duration: 0.5, stagger: 0.1 },
+              "-=0.3"
+            )
+            .fromTo('.footer-social > *',
+              { opacity: 0, scale: 0.8 },
+              { opacity: 1, scale: 1, duration: 0.4, stagger: 0.05 },
+              "-=0.2"
+            );
+          }
+        });
+
+        // Smooth scroll for hero visual
+        const heroVisual = document.querySelector('.hero-visual-main');
+        if (heroVisual) {
+          ScrollTrigger.create({
+            trigger: '.hero-section',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 2,
+            onUpdate: (self) => {
+              gsap.set(heroVisual, {
+                y: -50 * self.progress
+              });
+            }
+          });
         }
-      );
 
-      // Testimonials - 3D card effect
-      gsap.set('.testimonial-card', {
-        opacity: 0,
-        rotateY: -90,
-        z: -100
-      });
+        // Refresh ScrollTrigger
+        ScrollTrigger.refresh();
 
-      ScrollTrigger.batch('.testimonial-card', {
-        start: 'top 80%',
-        onEnter: (elements) => {
-          gsap.to(elements, {
-            opacity: 1,
-            rotateY: 0,
-            z: 0,
-            duration: 1,
-            stagger: 0.2,
-            ease: 'power3.out'
-          });
-        },
-        once: true
-      });
-
-      // CTA Section - Dramatic entrance
-      ScrollTrigger.create({
-        trigger: '.cta-section',
-        start: 'top 80%',
-        onEnter: () => {
-          const ctaTl = gsap.timeline();
-
-          ctaTl
-            .from('.cta-card', {
-              scale: 0.8,
-              opacity: 0,
-              duration: 1,
-              ease: 'power3.out'
-            })
-            .from('.cta-badge', {
-              scale: 0,
-              opacity: 0,
-              duration: 0.6,
-              ease: 'back.out(1.7)'
-            }, '-=0.5')
-            .from('.cta-title', {
-              y: 50,
-              opacity: 0,
-              duration: 0.8,
-              ease: 'power3.out'
-            }, '-=0.3')
-            .from('.cta-subtitle', {
-              y: 30,
-              opacity: 0,
-              duration: 0.6,
-              ease: 'power3.out'
-            }, '-=0.4')
-            .from('.cta-feature', {
-              scale: 0,
-              opacity: 0,
-              duration: 0.5,
-              stagger: 0.1,
-              ease: 'back.out(1.7)'
-            }, '-=0.2')
-            .from('.cta-buttons > *', {
-              y: 30,
-              opacity: 0,
-              duration: 0.6,
-              stagger: 0.1,
-              ease: 'power3.out'
-            }, '-=0.3');
-
-          // Glow pulse effect
-          gsap.to('.cta-glow', {
-            scale: 1.5,
-            opacity: 0.8,
-            duration: 2,
-            repeat: -1,
-            yoyo: true,
-            ease: 'power1.inOut'
-          });
-        },
-        once: true
-      });
-
-      // Footer animation
-      ScrollTrigger.create({
-        trigger: '.entry-footer',
-        start: 'top 90%',
-        onEnter: () => {
-          gsap.from('.footer-brand', {
-            opacity: 0,
-            y: 30,
-            duration: 0.8,
-            ease: 'power3.out'
-          });
-
-          gsap.from('.footer-column', {
-            opacity: 0,
-            y: 30,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: 'power3.out',
-            delay: 0.2
-          });
-
-          gsap.from('.footer-social > *', {
-            scale: 0,
-            opacity: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: 'back.out(1.7)',
-            delay: 0.4
-          });
-        },
-        once: true
-      });
-
-      // Smooth parallax for device mockup
-      gsap.to('.hero-visual-main', {
-        y: -50,
-        scrollTrigger: {
-          trigger: '.hero-section',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1.5
-        }
-      });
-
-      // Photo grid items animation
-      gsap.utils.toArray('.photo-item').forEach((item, i) => {
-        gsap.set(item, {
-          opacity: 0,
-          scale: 0
-        });
-
-        gsap.to(item, {
-          opacity: 1,
-          scale: 1,
-          duration: 0.5,
-          delay: 1 + (i * 0.1),
-          ease: 'back.out(1.7)'
-        });
-      });
-
-      // Text reveal animation for important text
-      gsap.utils.toArray('.text-gradient').forEach(text => {
-        gsap.from(text, {
-          scrollTrigger: {
-            trigger: text,
-            start: 'top 85%',
-            toggleActions: 'play none none reverse'
-          },
-          backgroundPosition: '200% 0',
-          duration: 1.5,
-          ease: 'power2.inOut'
-        });
-      });
-
-      // Refresh ScrollTrigger after all animations are set
-      ScrollTrigger.refresh();
-
+      } catch (error) {
+        console.error('GSAP animation error:', error);
+        // Fallback: make everything visible if animations fail
+        gsap.set('*', { clearProps: 'all' });
+      }
     }, mainRef);
 
-    return () => ctx.revert();
-  }, []);
+    // Cleanup
+    return () => {
+      ctx.revert();
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+  }, [isLoaded]);
 
   const handleLogin = () => {
     navigate('/');
@@ -611,28 +629,28 @@ function Entry() {
               <div className="stat-icon">
                 <Users />
               </div>
-              <h3 className="stat-number" data-suffix="+">5000</h3>
+              <h3 className="stat-number" data-value="5000" data-suffix="+">0</h3>
               <p>Famílias Conectadas</p>
             </div>
             <div className="stat-card">
               <div className="stat-icon">
                 <Image />
               </div>
-              <h3 className="stat-number" data-suffix="M+">2</h3>
+              <h3 className="stat-number" data-value="2" data-suffix="M+">0</h3>
               <p>Fotos Organizadas</p>
             </div>
             <div className="stat-card">
               <div className="stat-icon">
                 <Brain />
               </div>
-              <h3 className="stat-number" data-suffix="%">99</h3>
+              <h3 className="stat-number" data-value="99" data-suffix="%">0</h3>
               <p>Precisão da IA</p>
             </div>
             <div className="stat-card">
               <div className="stat-icon">
                 <Star />
               </div>
-              <h3 className="stat-number" data-suffix="">5</h3>
+              <h3 className="stat-number" data-value="5" data-suffix="">0</h3>
               <p>Estrelas de Avaliação</p>
             </div>
           </div>
